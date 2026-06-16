@@ -1,0 +1,686 @@
+{
+  "version": 1,
+  "schools": [
+    {
+      "name": "Abbotsleigh",
+      "file": "images/Abbotsleigh.png",
+      "officialName": "Abbotsleigh",
+      "aliases": [
+        "Abbotsleigh School",
+        "Abbotsleigh School for Girls"
+      ]
+    },
+    {
+      "name": "Ascham",
+      "file": "images/Ascham.png",
+      "officialName": "Ascham School",
+      "sourceURL": "https://www.ascham.nsw.edu.au/",
+      "aliases": [
+        "Ascham School"
+      ]
+    },
+    {
+      "name": "Barker",
+      "file": "images/Barker.png",
+      "officialName": "Barker College",
+      "aliases": [
+        "Barker College"
+      ]
+    },
+    {
+      "name": "Baulkham Hills",
+      "file": "images/Baulkham Hills.png",
+      "officialName": "Baulkham Hills High School",
+      "sourceURL": "https://baulkham-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Baulkham Hills High School",
+        "BHHS",
+        "Baulko"
+      ]
+    },
+    {
+      "name": "Blacktown Boys",
+      "file": "images/Blacktown Boys.png",
+      "officialName": "Blacktown Boys High School",
+      "sourceURL": "https://blacktownb-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Blacktown Boys High School",
+        "BBHS"
+      ]
+    },
+    {
+      "name": "Callaghan Jesmond",
+      "file": "images/Callaghan Jesmond.png",
+      "officialName": "Callaghan College Jesmond Senior Campus",
+      "aliases": [
+        "Callaghan College Jesmond Senior Campus",
+        "Jesmond Senior Campus",
+        "Callaghan College Jesmond"
+      ]
+    },
+    {
+      "name": "Caringbah",
+      "file": "images/Caringbah.png",
+      "officialName": "Caringbah High School",
+      "sourceURL": "https://caringbah-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Caringbah High School"
+      ]
+    },
+    {
+      "name": "Cheltenham Girls",
+      "file": "images/Cheltenham Girls.png",
+      "officialName": "Cheltenham Girls' High School",
+      "sourceURL": "https://cheltenham-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Cheltenham Girls High School",
+        "CGHS"
+      ]
+    },
+    {
+      "name": "Cherrybrook Tech",
+      "file": "images/Cherrybrook Tech.png",
+      "officialName": "Cherrybrook Technology High School",
+      "sourceURL": "https://cths.nsw.edu.au/",
+      "aliases": [
+        "Cherrybrook Technology High School",
+        "CTHS"
+      ]
+    },
+    {
+      "name": "Cranbrook",
+      "file": "images/Cranbrook.png",
+      "officialName": "Cranbrook School",
+      "aliases": [
+        "Cranbrook School",
+        "Cranbrook Sydney"
+      ]
+    },
+    {
+      "name": "Crestwood",
+      "file": "images/Crestwood.png",
+      "officialName": "Crestwood High School",
+      "sourceURL": "https://crestwood-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Crestwood High School"
+      ]
+    },
+    {
+      "name": "Danebank",
+      "file": "images/Danebank.png",
+      "officialName": "Danebank Anglican School for Girls",
+      "sourceURL": "https://www.danebank.nsw.edu.au/",
+      "aliases": [
+        "Danebank",
+        "Danebank School"
+      ]
+    },
+    {
+      "name": "Fort St",
+      "file": "images/Fort St.png",
+      "officialName": "Fort Street High School",
+      "sourceURL": "https://fortstreet-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Fort Street High School",
+        "Fort Street",
+        "FSHS"
+      ]
+    },
+    {
+      "name": "Frensham",
+      "file": "images/Frensham.png",
+      "officialName": "Frensham",
+      "aliases": [
+        "Frensham School"
+      ]
+    },
+    {
+      "name": "Girraween",
+      "file": "images/Girraween.png",
+      "officialName": "Girraween High School",
+      "sourceURL": "https://girraween-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Girraween High School",
+        "GHS"
+      ]
+    },
+    {
+      "name": "Glenwood",
+      "file": "images/Glenwood.png",
+      "officialName": "Glenwood High School",
+      "sourceURL": "https://glenwood-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Glenwood High School"
+      ]
+    },
+    {
+      "name": "Gosford",
+      "file": "images/Gosford.png",
+      "officialName": "Gosford High School",
+      "sourceURL": "https://gosford-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Gosford High School"
+      ]
+    },
+    {
+      "name": "Hills Grammar",
+      "file": "images/Hills Grammar.png",
+      "officialName": "The Hills Grammar School",
+      "aliases": [
+        "The Hills Grammar School",
+        "Hills Grammar"
+      ]
+    },
+    {
+      "name": "Hornsby Girls",
+      "file": "images/Hornsby Girls.png",
+      "officialName": "Hornsby Girls High School",
+      "sourceURL": "https://hornsbygir-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Hornsby Girls' High School",
+        "Hornsby Girls High School",
+        "HGHS"
+      ]
+    },
+    {
+      "name": "Hunters Hill",
+      "file": "images/Hunters Hill.png",
+      "officialName": "Hunters Hill High School",
+      "sourceURL": "https://huntershd-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Hunters Hill High School",
+        "HHHS"
+      ]
+    },
+    {
+      "name": "Hurlstone",
+      "file": "images/Hurlstone.png",
+      "officialName": "Hurlstone Agricultural High School",
+      "sourceURL": "https://hurlstone-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Hurlstone Agricultural High School",
+        "HAHS"
+      ]
+    },
+    {
+      "name": "International Grammar",
+      "file": "images/International Grammar.png",
+      "officialName": "International Grammar School Sydney",
+      "aliases": [
+        "International Grammar School",
+        "International Grammar School Sydney",
+        "IGS"
+      ]
+    },
+    {
+      "name": "James Ruse",
+      "file": "images/James Ruse.png",
+      "officialName": "James Ruse Agricultural High School",
+      "sourceURL": "https://jamesruse-h.schools.nsw.gov.au/",
+      "aliases": [
+        "James Ruse Agricultural High School",
+        "JRAHS",
+        "James Ruse"
+      ]
+    },
+    {
+      "name": "Kambala",
+      "file": "images/Kambala.png",
+      "officialName": "Kambala",
+      "sourceURL": "https://kambala.nsw.edu.au/",
+      "aliases": [
+        "Kambala School"
+      ]
+    },
+    {
+      "name": "Killara",
+      "file": "images/Killara.png",
+      "officialName": "Killara High School",
+      "sourceURL": "https://killara-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Killara High School",
+        "KHS"
+      ]
+    },
+    {
+      "name": "Kincoppal",
+      "file": "images/Kincoppal.png",
+      "officialName": "Kincoppal-Rose Bay School of the Sacred Heart",
+      "aliases": [
+        "Kincoppal-Rose Bay",
+        "KRB",
+        "Kincoppal Rose Bay"
+      ]
+    },
+    {
+      "name": "Kings",
+      "file": "images/Kings.png",
+      "officialName": "The King's School",
+      "sourceURL": "https://www.kings.edu.au/",
+      "aliases": [
+        "The King's School",
+        "King's School"
+      ]
+    },
+    {
+      "name": "Kinross Wolaroi",
+      "file": "images/Kinross Wolaroi.png",
+      "officialName": "Kinross Wolaroi School",
+      "aliases": [
+        "Kinross Wolaroi School",
+        "KWS"
+      ]
+    },
+    {
+      "name": "Kirrawee",
+      "file": "images/Kirrawee.png",
+      "officialName": "Kirrawee High School",
+      "sourceURL": "https://kirrawee-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Kirrawee High School",
+        "KHS"
+      ]
+    },
+    {
+      "name": "Knox",
+      "file": "images/Knox.png",
+      "officialName": "Knox Grammar School",
+      "sourceURL": "https://www.knox.nsw.edu.au/",
+      "aliases": [
+        "Knox Grammar School",
+        "Knox Grammar"
+      ]
+    },
+    {
+      "name": "Kotara",
+      "file": "images/Kotara.png",
+      "officialName": "Kotara High School",
+      "sourceURL": "https://kotara-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Kotara High School"
+      ]
+    },
+    {
+      "name": "Loreto Kirribilli",
+      "file": "images/Loreto Kirribilli.png",
+      "officialName": "Loreto Kirribilli",
+      "sourceURL": "https://www.loreto.nsw.edu.au/",
+      "aliases": [
+        "Loreto Kirribilli School"
+      ]
+    },
+    {
+      "name": "Loreto Normanhurst",
+      "file": "images/Loreto Normanhurst.png",
+      "officialName": "Loreto Normanhurst",
+      "sourceURL": "https://www.loretonh.nsw.edu.au/",
+      "aliases": [
+        "Loreto Normanhurst School"
+      ]
+    },
+    {
+      "name": "Manly",
+      "file": "images/Manly.png",
+      "officialName": "Northern Beaches Secondary College Manly Campus",
+      "aliases": [
+        "Manly Selective Campus",
+        "NBSC Manly Campus",
+        "Manly Campus"
+      ]
+    },
+    {
+      "name": "Masada",
+      "file": "images/Masada.png",
+      "officialName": "Masada College",
+      "sourceURL": "https://masada.nsw.edu.au/",
+      "aliases": [
+        "Masada College"
+      ]
+    },
+    {
+      "name": "Merewether",
+      "file": "images/Merewether.png",
+      "officialName": "Merewether High School",
+      "sourceURL": "https://merewether-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Merewether High School",
+        "MHS"
+      ]
+    },
+    {
+      "name": "MLC",
+      "file": "images/MLC.png",
+      "officialName": "MLC School",
+      "aliases": [
+        "MLC School",
+        "MLC School Sydney",
+        "Methodist Ladies' College Burwood"
+      ]
+    },
+    {
+      "name": "Moriah",
+      "file": "images/Moriah.png",
+      "officialName": "Moriah College",
+      "aliases": [
+        "Moriah College"
+      ]
+    },
+    {
+      "name": "Newcastle Grammar",
+      "file": "images/Newcastle Grammar.png",
+      "officialName": "Newcastle Grammar School",
+      "aliases": [
+        "Newcastle Grammar School",
+        "NGS"
+      ]
+    },
+    {
+      "name": "Newington",
+      "file": "images/Newington.png",
+      "officialName": "Newington College",
+      "aliases": [
+        "Newington College"
+      ]
+    },
+    {
+      "name": "Normanhurst Boys",
+      "file": "images/Normanhurst Boys.png",
+      "officialName": "Normanhurst Boys High School",
+      "aliases": [
+        "Normanhurst Boys High School",
+        "NBHS"
+      ]
+    },
+    {
+      "name": "North Sydney Boys",
+      "file": "images/North Sydney Boys.png",
+      "officialName": "North Sydney Boys High School",
+      "sourceURL": "https://northsydbo-h.schools.nsw.gov.au/",
+      "aliases": [
+        "North Sydney Boys' High School",
+        "North Sydney Boys High School",
+        "NSBHS"
+      ]
+    },
+    {
+      "name": "North Sydney Girls",
+      "file": "images/North Sydney Girls.png",
+      "officialName": "North Sydney Girls High School",
+      "sourceURL": "https://northsydgi-h.schools.nsw.gov.au/",
+      "aliases": [
+        "North Sydney Girls' High School",
+        "North Sydney Girls High School",
+        "NSGHS"
+      ]
+    },
+    {
+      "name": "Oxley",
+      "file": "images/Oxley.png",
+      "officialName": "Oxley College",
+      "aliases": [
+        "Oxley College",
+        "Oxley College Burradoo"
+      ]
+    },
+    {
+      "name": "Penrith",
+      "file": "images/Penrith.png",
+      "officialName": "Penrith High School",
+      "sourceURL": "https://penrith-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Penrith High School",
+        "Penrith Selective High School",
+        "PHS"
+      ]
+    },
+    {
+      "name": "PHCS",
+      "file": "images/PHCS.png",
+      "officialName": "Pacific Hills Christian School",
+      "sourceURL": "https://www.pacifichills.nsw.edu.au/",
+      "aliases": [
+        "Pacific Hills Christian School",
+        "PHCS"
+      ]
+    },
+    {
+      "name": "Pittwater House",
+      "file": "images/Pittwater House.png",
+      "officialName": "Pittwater House",
+      "sourceURL": "https://pittwaterhouse.com.au/",
+      "aliases": [
+        "The Pittwater House Schools",
+        "Pittwater House School"
+      ]
+    },
+    {
+      "name": "Port Hacking",
+      "file": "images/Port Hacking.png",
+      "officialName": "Port Hacking High School",
+      "sourceURL": "https://porthackin-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Port Hacking High School",
+        "PHHS"
+      ]
+    },
+    {
+      "name": "Presbyterian",
+      "file": "images/Presbyterian.png",
+      "officialName": "Presbyterian Ladies' College Sydney",
+      "sourceURL": "https://www.plc.nsw.edu.au/",
+      "aliases": [
+        "Presbyterian Ladies College Sydney",
+        "PLC Sydney",
+        "PLC Croydon"
+      ]
+    },
+    {
+      "name": "Pymble",
+      "file": "images/Pymble.png",
+      "officialName": "Pymble Ladies' College",
+      "sourceURL": "https://www.pymblelc.nsw.edu.au/",
+      "aliases": [
+        "Pymble Ladies College",
+        "Pymble LC",
+        "PLC Pymble"
+      ]
+    },
+    {
+      "name": "Ravenswood",
+      "file": "images/Ravenswood.png",
+      "officialName": "Ravenswood School for Girls",
+      "aliases": [
+        "Ravenswood School for Girls",
+        "Ravenswood"
+      ]
+    },
+    {
+      "name": "Redlands",
+      "file": "images/Redlands.png",
+      "officialName": "Redlands",
+      "aliases": [
+        "Redlands School",
+        "SCECGS Redlands"
+      ]
+    },
+    {
+      "name": "Riverview",
+      "file": "images/Riverview.png",
+      "officialName": "Saint Ignatius' College Riverview",
+      "aliases": [
+        "St Ignatius' College Riverview",
+        "Saint Ignatius College Riverview",
+        "Riverview"
+      ]
+    },
+    {
+      "name": "Roseville",
+      "file": "images/Roseville.png",
+      "officialName": "Roseville College",
+      "aliases": [
+        "Roseville College"
+      ]
+    },
+    {
+      "name": "SCEGGS",
+      "file": "images/SCEGGS.png",
+      "officialName": "SCEGGS Darlinghurst",
+      "sourceURL": "https://www.sceggs.nsw.edu.au/",
+      "aliases": [
+        "SCEGGS Darlinghurst",
+        "Sydney Church of England Girls' Grammar School"
+      ]
+    },
+    {
+      "name": "Scots",
+      "file": "images/Scots.png",
+      "officialName": "The Scots College",
+      "aliases": [
+        "The Scots College",
+        "Scots College",
+        "TSC"
+      ]
+    },
+    {
+      "name": "Shore",
+      "file": "images/Shore.png",
+      "officialName": "Sydney Church of England Grammar School",
+      "aliases": [
+        "Shore School",
+        "Sydney Church of England Grammar School",
+        "Shore"
+      ]
+    },
+    {
+      "name": "Smiths Hill",
+      "file": "images/Smiths Hill.png",
+      "officialName": "Smiths Hill High School",
+      "sourceURL": "https://smithshill-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Smith's Hill High School",
+        "Smiths Hill High School",
+        "SHHS"
+      ]
+    },
+    {
+      "name": "St Catherines",
+      "file": "images/St Catherines.png",
+      "officialName": "St Catherine's School Sydney",
+      "aliases": [
+        "St Catherine's School",
+        "St Catherines School",
+        "St Catherine's Sydney"
+      ]
+    },
+    {
+      "name": "St George Girls",
+      "file": "images/St George Girls.png",
+      "officialName": "St George Girls High School",
+      "sourceURL": "https://stgeorgegi-h.schools.nsw.gov.au/",
+      "aliases": [
+        "St George Girls High School",
+        "SGGHS"
+      ]
+    },
+    {
+      "name": "Stella Maris",
+      "file": "images/Stella Maris.png",
+      "officialName": "Stella Maris College Manly",
+      "sourceURL": "https://www.stellamaris.nsw.edu.au/",
+      "aliases": [
+        "Stella Maris College",
+        "Stella Maris College Manly"
+      ]
+    },
+    {
+      "name": "Strathfield Girls",
+      "file": "images/Strathfield Girls.png",
+      "officialName": "Strathfield Girls High School",
+      "sourceURL": "https://strathfieg-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Strathfield Girls High School",
+        "SGHS"
+      ]
+    },
+    {
+      "name": "Sydney Boys",
+      "file": "images/Sydney Boys.png",
+      "officialName": "Sydney Boys High School",
+      "sourceURL": "https://sydneyboys-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Sydney Boys High School",
+        "Sydney High School",
+        "SBHS"
+      ]
+    },
+    {
+      "name": "Sydney Girls",
+      "file": "images/Sydney Girls.png",
+      "officialName": "Sydney Girls High School",
+      "sourceURL": "https://sydneygirl-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Sydney Girls High School",
+        "SGHS"
+      ]
+    },
+    {
+      "name": "Sydney Grammar",
+      "file": "images/Sydney Grammar.png",
+      "officialName": "Sydney Grammar School",
+      "aliases": [
+        "Sydney Grammar School",
+        "SGS"
+      ]
+    },
+    {
+      "name": "Sydney Tech",
+      "file": "images/Sydney Tech.png",
+      "officialName": "Sydney Technical High School",
+      "sourceURL": "https://sydneytech-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Sydney Technical High School",
+        "STHS",
+        "Sydney Tech"
+      ]
+    },
+    {
+      "name": "Taylors",
+      "file": "images/Taylors.png",
+      "officialName": "Taylors College Sydney",
+      "aliases": [
+        "Taylors College",
+        "Taylors College Sydney"
+      ]
+    },
+    {
+      "name": "Trinity Grammar",
+      "file": "images/Trinity Grammar.png",
+      "officialName": "Trinity Grammar School",
+      "aliases": [
+        "Trinity Grammar School",
+        "Trinity Grammar",
+        "TGS"
+      ]
+    },
+    {
+      "name": "Westfield Sports",
+      "file": "images/Westfield Sports.png",
+      "officialName": "Westfields Sports High School",
+      "sourceURL": "https://westfields-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Westfields Sports High School",
+        "Westfield Sports High School",
+        "WSHS"
+      ]
+    },
+    {
+      "name": "Whitebridge",
+      "file": "images/Whitebridge.png",
+      "officialName": "Whitebridge High School",
+      "sourceURL": "https://whitebridg-h.schools.nsw.gov.au/",
+      "aliases": [
+        "Whitebridge High School"
+      ]
+    }
+  ]
+}
