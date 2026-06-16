@@ -19,6 +19,7 @@ final class FlaggedQuestion {
     var questionImageRelativePath: String
     var solutionImageRelativePath: String?
     var createdAt: Date
+    var deletedAt: Date?
 
     var category: QuestionCategory {
         get { QuestionCategory(rawValue: categoryRawValue) ?? .mistake }
@@ -36,7 +37,8 @@ final class FlaggedQuestion {
         isCompleted: Bool = false,
         questionImageRelativePath: String,
         solutionImageRelativePath: String? = nil,
-        createdAt: Date = .now
+        createdAt: Date = .now,
+        deletedAt: Date? = nil
     ) {
         self.id = id
         self.paperID = paperID
@@ -49,5 +51,6 @@ final class FlaggedQuestion {
         self.questionImageRelativePath = questionImageRelativePath
         self.solutionImageRelativePath = solutionImageRelativePath
         self.createdAt = createdAt
+        self.deletedAt = deletedAt
     }
 }

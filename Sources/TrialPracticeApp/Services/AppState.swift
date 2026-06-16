@@ -24,11 +24,11 @@ final class AppState: ObservableObject {
     private var securityScopedURL: URL?
 
     var needsSetup: Bool {
-        rootFolderURL == nil
+        false
     }
 
     init() {
-        restoreRootFolder()
+        configureApplicationSupportRoot()
     }
 
     @discardableResult
@@ -233,6 +233,21 @@ final class AppState: ObservableObject {
 
         rootFolderURL = nil
         setupErrorMessage = nil
+        configureApplicationSupportRoot()
+    }
+
+    private func configureApplicationSupportRoot() {
+        do {
+            let rootURL = try AppDirectories.fileStorageURL
+            let fileStore = LocalFileStore(rootURL: rootURL)
+            try fileStore.prepareFolderStructure()
+            try fileStore.verifyWriteAccess()
+            rootFolderURL = rootURL
+            setupErrorMessage = nil
+        } catch {
+            rootFolderURL = nil
+            setupErrorMessage = error.localizedDescription
+        }
     }
 
     private func restoreRootFolder() {

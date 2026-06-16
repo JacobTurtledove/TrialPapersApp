@@ -15,6 +15,7 @@ final class Paper {
     var hasSolutions: Bool?
     var isCompleted: Bool = false
     var createdAt: Date
+    var deletedAt: Date?
 
     init(
         id: UUID = UUID(),
@@ -28,7 +29,8 @@ final class Paper {
         solutionsStartPage: Int? = nil,
         hasSolutions: Bool? = nil,
         isCompleted: Bool = false,
-        createdAt: Date = .now
+        createdAt: Date = .now,
+        deletedAt: Date? = nil
     ) {
         self.id = id
         self.subjectID = subjectID
@@ -42,5 +44,6 @@ final class Paper {
         self.hasSolutions = hasSolutions
         self.isCompleted = isCompleted
         self.createdAt = createdAt
+        self.deletedAt = deletedAt
     }
 }

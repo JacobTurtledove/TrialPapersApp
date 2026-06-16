@@ -22,6 +22,7 @@ struct FlaggedQuestionsView: View {
     @Query(sort: \FlaggedQuestion.createdAt, order: .reverse)
     private var questions: [FlaggedQuestion]
     @Query(sort: \Subject.displayName) private var subjects: [Subject]
+    @Query private var papers: [Paper]
 
     private let columns = [
         GridItem(.adaptive(minimum: 190, maximum: 240), spacing: 20)
@@ -30,7 +31,14 @@ struct FlaggedQuestionsView: View {
     private var subjectFolders: [(subject: Subject, questions: [FlaggedQuestion])] {
         subjects.compactMap { subject in
             guard subject.deletedAt == nil else { return nil }
-            let matchingQuestions = questions.filter { $0.subjectID == subject.id }
+            let activePaperIDs = Set(papers.filter {
+                $0.deletedAt == nil && $0.subjectID == subject.id
+            }.map(\.id))
+            let matchingQuestions = questions.filter {
+                $0.deletedAt == nil &&
+                $0.subjectID == subject.id &&
+                activePaperIDs.contains($0.paperID)
+            }
             return matchingQuestions.isEmpty ? nil : (subject, matchingQuestions)
         }
     }
@@ -71,15 +79,25 @@ private struct SubjectFlaggedQuestionsView: View {
     @Query(sort: \FlaggedQuestion.createdAt, order: .reverse)
     private var questions: [FlaggedQuestion]
     @Query(sort: \School.displayName) private var schools: [School]
+    @Query private var papers: [Paper]
 
     let subject: Subject
 
     @State private var searchText = ""
     @State private var categoryFilter: CategoryFilter = .all
     @State private var completionFilter: CompletionFilter = .incomplete
+    @State private var exportMessage: String?
+    @State private var exportedURL: URL?
 
     private var subjectQuestions: [FlaggedQuestion] {
-        questions.filter { $0.subjectID == subject.id }
+        let activePaperIDs = Set(papers.filter {
+            $0.deletedAt == nil && $0.subjectID == subject.id
+        }.map(\.id))
+        return questions.filter {
+            $0.deletedAt == nil &&
+            $0.subjectID == subject.id &&
+            activePaperIDs.contains($0.paperID)
+        }
     }
 
     private var filteredQuestions: [FlaggedQuestion] {
@@ -155,6 +173,9 @@ private struct SubjectFlaggedQuestionsView: View {
                                 reveal(solutionPath)
                             }
                         }
+                        Button("Export Flagged Question") {
+                            exportQuestion(question)
+                        }
                     }
                 }
             }
@@ -166,6 +187,22 @@ private struct SubjectFlaggedQuestionsView: View {
             placement: .toolbar,
             prompt: "School, year, or question"
         )
+        .alert(
+            "Flagged Question Export",
+            isPresented: Binding(
+                get: { exportMessage != nil },
+                set: { if !$0 { exportMessage = nil } }
+            )
+        ) {
+            if let exportedURL {
+                Button("Show in Finder") {
+                    FinderRevealService.reveal(exportedURL)
+                }
+            }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportMessage ?? "")
+        }
     }
 
     private var filterBar: some View {
@@ -204,6 +241,26 @@ private struct SubjectFlaggedQuestionsView: View {
             relativePath: relativePath,
             rootURL: rootURL
         )
+    }
+
+    private func exportQuestion(_ question: FlaggedQuestion) {
+        guard let rootURL = appState.rootFolderURL else {
+            exportMessage = "The app storage folder is unavailable."
+            return
+        }
+        guard let destinationURL = chooseExportFolder() else { return }
+        do {
+            exportedURL = try LibraryExportService(rootURL: rootURL).exportFlaggedQuestion(
+                question,
+                subject: subject,
+                school: school(for: question),
+                to: destinationURL
+            )
+            exportMessage = "Flagged question exported successfully."
+        } catch {
+            exportedURL = nil
+            exportMessage = error.localizedDescription
+        }
     }
 }
 
@@ -301,6 +358,7 @@ private struct FlaggedQuestionRow: View {
 }
 
 private struct FlaggedQuestionDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var appState: AppState
 
@@ -309,6 +367,8 @@ private struct FlaggedQuestionDetailView: View {
     let school: School?
 
     @State private var errorMessage: String?
+    @State private var exportMessage: String?
+    @State private var exportedURL: URL?
     @State private var showDeleteConfirmation = false
     @State private var isSolutionVisible = false
 
@@ -373,8 +433,16 @@ private struct FlaggedQuestionDetailView: View {
 
                 Divider()
 
-                Button("Delete Flagged Question", role: .destructive) {
-                    showDeleteConfirmation = true
+                HStack {
+                    Button {
+                        exportQuestion()
+                    } label: {
+                        Label("Export Flagged Question", systemImage: "square.and.arrow.up")
+                    }
+
+                    Button("Delete Flagged Question", role: .destructive) {
+                        showDeleteConfirmation = true
+                    }
                 }
             }
             .padding(24)
@@ -389,7 +457,7 @@ private struct FlaggedQuestionDetailView: View {
                 deleteQuestion()
             }
         } message: {
-            Text("The captured question and solution images will also be deleted.")
+            Text("The flagged question will move to the Bin. Stored images will remain in Application Support.")
         }
         .alert(
             "Could Not Update Question",
@@ -401,6 +469,22 @@ private struct FlaggedQuestionDetailView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
+        }
+        .alert(
+            "Flagged Question Export",
+            isPresented: Binding(
+                get: { exportMessage != nil },
+                set: { if !$0 { exportMessage = nil } }
+            )
+        ) {
+            if let exportedURL {
+                Button("Show in Finder") {
+                    FinderRevealService.reveal(exportedURL)
+                }
+            }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportMessage ?? "")
         }
     }
 
@@ -427,7 +511,7 @@ private struct FlaggedQuestionDetailView: View {
 
     private func reveal(_ relativePath: String) {
         guard let rootURL = appState.rootFolderURL else {
-            errorMessage = "Reconnect the app data folder in Settings."
+            errorMessage = "The app storage folder is unavailable."
             return
         }
         do {
@@ -453,20 +537,35 @@ private struct FlaggedQuestionDetailView: View {
     }
 
     private func deleteQuestion() {
+        let oldDeletedAt = question.deletedAt
+        do {
+            question.deletedAt = .now
+            try modelContext.save()
+            dismiss()
+        } catch {
+            question.deletedAt = oldDeletedAt
+            modelContext.rollback()
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func exportQuestion() {
         guard let rootURL = appState.rootFolderURL else {
-            errorMessage = "The data folder is unavailable. Reconnect it in Settings."
+            exportMessage = "The app storage folder is unavailable."
             return
         }
-        var transaction: LocalFileStore.DeletionTransaction?
+        guard let destinationURL = chooseExportFolder() else { return }
         do {
-            transaction = try LocalFileStore(rootURL: rootURL).stageDeletion(for: question)
-            modelContext.delete(question)
-            try modelContext.save()
-            try? transaction?.commit()
+            exportedURL = try LibraryExportService(rootURL: rootURL).exportFlaggedQuestion(
+                question,
+                subject: subject,
+                school: school,
+                to: destinationURL
+            )
+            exportMessage = "Flagged question exported successfully."
         } catch {
-            modelContext.rollback()
-            try? transaction?.rollback()
-            errorMessage = error.localizedDescription
+            exportedURL = nil
+            exportMessage = error.localizedDescription
         }
     }
 }
@@ -487,4 +586,16 @@ private struct StoredImage: View {
             ContentUnavailableView("Image Missing", systemImage: "photo.badge.exclamationmark")
         }
     }
+}
+
+@MainActor
+private func chooseExportFolder() -> URL? {
+    let panel = NSOpenPanel()
+    panel.allowedContentTypes = [.folder]
+    panel.canChooseFiles = false
+    panel.canChooseDirectories = true
+    panel.canCreateDirectories = true
+    panel.allowsMultipleSelection = false
+    panel.prompt = "Export"
+    return panel.runModal() == .OK ? panel.url : nil
 }

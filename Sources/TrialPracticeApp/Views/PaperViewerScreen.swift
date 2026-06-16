@@ -1,3 +1,4 @@
+import AppKit
 import PDFKit
 import SwiftData
 import SwiftUI
@@ -28,6 +29,9 @@ struct PaperViewerScreen: View {
     @State private var isSavingQuestion = false
     @State private var captureError: String?
     @State private var paperUpdateError: String?
+    @State private var exportMessage: String?
+    @State private var showExportResult = false
+    @State private var exportedURL: URL?
     @State private var showDuplicateWarning = false
     @State private var isChoosingSolutionsStart = false
     @State private var showSolutionsSetupPrompt = false
@@ -113,6 +117,16 @@ struct PaperViewerScreen: View {
         } message: {
             Text(paperUpdateError ?? "")
         }
+        .alert("PDF Export", isPresented: $showExportResult) {
+            if let exportedURL {
+                Button("Show in Finder") {
+                    FinderRevealService.reveal(exportedURL)
+                }
+            }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportMessage ?? "")
+        }
     }
 
     private var viewerToolbar: some View {
@@ -156,6 +170,13 @@ struct PaperViewerScreen: View {
             } label: {
                 Label("Show in Finder", systemImage: "folder")
             }
+
+            Button {
+                exportPaper()
+            } label: {
+                Label("Export PDF", systemImage: "square.and.arrow.up")
+            }
+            .disabled(questionURL == nil)
 
             Button {
                 beginFlagging()
@@ -217,7 +238,7 @@ struct PaperViewerScreen: View {
 
     private func revealPaper() {
         guard let rootURL = appState.rootFolderURL else {
-            paperUpdateError = "Reconnect the app data folder in Settings."
+            paperUpdateError = "The app storage folder is unavailable."
             return
         }
         do {
@@ -496,6 +517,7 @@ struct PaperViewerScreen: View {
         }
 
         let isDuplicate = existingQuestions.contains {
+            $0.deletedAt == nil &&
             $0.subjectID == subject.id &&
             $0.schoolID == school.id &&
             $0.year == paper.year &&
@@ -586,5 +608,34 @@ struct PaperViewerScreen: View {
             captureError = error.localizedDescription
             isSavingQuestion = false
         }
+    }
+
+    private func exportPaper() {
+        guard let rootURL = appState.rootFolderURL else {
+            exportMessage = "The app storage folder is unavailable."
+            showExportResult = true
+            return
+        }
+        let savePanel = NSSavePanel()
+        savePanel.allowedContentTypes = [.pdf]
+        savePanel.canCreateDirectories = true
+        let storedPath = paper.combinedPDFRelativePath ?? paper.questionPDFRelativePath
+        savePanel.nameFieldStringValue = (storedPath as NSString).lastPathComponent
+
+        guard savePanel.runModal() == .OK, let destinationURL = savePanel.url else {
+            return
+        }
+
+        do {
+            exportedURL = try LibraryExportService(rootURL: rootURL).exportPaper(
+                paper,
+                to: destinationURL
+            )
+            exportMessage = "PDF exported successfully."
+        } catch {
+            exportedURL = nil
+            exportMessage = error.localizedDescription
+        }
+        showExportResult = true
     }
 }

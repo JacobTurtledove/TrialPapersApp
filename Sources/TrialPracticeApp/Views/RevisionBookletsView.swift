@@ -24,6 +24,7 @@ struct RevisionBookletsView: View {
     @Query(sort: \FlaggedQuestion.createdAt) private var questions: [FlaggedQuestion]
     @Query(sort: \Subject.displayName) private var subjects: [Subject]
     @Query(sort: \School.displayName) private var schools: [School]
+    @Query private var papers: [Paper]
 
     @State private var selectedSubjectID: UUID?
     @State private var categoryFilter: BookletCategoryFilter = .both
@@ -33,7 +34,10 @@ struct RevisionBookletsView: View {
     @State private var isExporting = false
 
     private var availableSubjects: [Subject] {
-        let subjectIDs = Set(questions.map(\.subjectID))
+        let activePaperIDs = Set(papers.filter { $0.deletedAt == nil }.map(\.id))
+        let subjectIDs = Set(questions.filter {
+            $0.deletedAt == nil && activePaperIDs.contains($0.paperID)
+        }.map(\.subjectID))
         return subjects.filter {
             $0.deletedAt == nil && subjectIDs.contains($0.id)
         }
@@ -45,8 +49,13 @@ struct RevisionBookletsView: View {
 
     private var filteredQuestions: [FlaggedQuestion] {
         guard let selectedSubjectID else { return [] }
+        let activePaperIDs = Set(papers.filter {
+            $0.deletedAt == nil && $0.subjectID == selectedSubjectID
+        }.map(\.id))
         return questions.filter { question in
             guard question.subjectID == selectedSubjectID else { return false }
+            guard question.deletedAt == nil else { return false }
+            guard activePaperIDs.contains(question.paperID) else { return false }
 
             switch categoryFilter {
             case .both:

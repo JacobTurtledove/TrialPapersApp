@@ -6,37 +6,44 @@ import UniformTypeIdentifiers
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var appState: AppState
+    @Query(sort: \Subject.displayName) private var subjects: [Subject]
+    @Query private var papers: [Paper]
+    @Query private var flaggedQuestions: [FlaggedQuestion]
 
-    @State private var isChoosingFolder = false
     @State private var isShowingDeveloperTools = false
     @State private var isShowingResetConfirmation = false
     @State private var resetConfirmationText = ""
     @State private var resetErrorMessage: String?
+    @State private var exportMessage: String?
+    @State private var exportedURL: URL?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Data Folder")
+                    Text("Storage")
                         .font(.title2.bold())
 
                     Label(
-                        appState.rootFolderURL?.lastPathComponent ?? "Not selected",
+                        appState.rootFolderURL?.path ?? "Application Support folder unavailable",
                         systemImage: "folder"
                     )
                     .foregroundStyle(.secondary)
 
-                    Button("Reconnect or Choose Another Folder") {
-                        isChoosingFolder = true
-                    }
-                    .padding(.top, 4)
-
-                    Button("Show Data Folder in Finder") {
+                    Button("Show Application Support Folder") {
                         if let rootURL = appState.rootFolderURL {
                             FinderRevealService.reveal(rootURL)
                         }
                     }
+                    .padding(.top, 4)
                     .disabled(appState.rootFolderURL == nil)
+
+                    Button {
+                        exportLibrary()
+                    } label: {
+                        Label("Export Library", systemImage: "square.and.arrow.up")
+                    }
+                    .disabled(activePapers.isEmpty && activeFlaggedQuestions.isEmpty)
                 }
 
                 Divider()
@@ -46,7 +53,7 @@ struct SettingsView: View {
                         .font(.title2.bold())
 
                     Label(
-                        "No account is required. Your imported files remain in your chosen data folder.",
+                        "No account is required. Imported files are stored locally in Application Support.",
                         systemImage: "lock.shield"
                     )
                     .foregroundStyle(.secondary)
@@ -58,7 +65,7 @@ struct SettingsView: View {
                     DisclosureGroup("Developer Tools", isExpanded: $isShowingDeveloperTools) {
                         VStack(alignment: .leading, spacing: 10) {
                             Text(
-                                "Reset every app-owned record, preference, cache, and file inside the selected app data folder. This is for development testing only."
+                                "Reset every app-owned record, preference, cache, and file inside Application Support. This is for development testing only."
                             )
                             .font(.callout)
                             .foregroundStyle(.secondary)
@@ -104,19 +111,66 @@ struct SettingsView: View {
         } message: {
             Text(resetErrorMessage ?? "")
         }
-        .fileImporter(
-            isPresented: $isChoosingFolder,
-            allowedContentTypes: [.folder],
-            allowsMultipleSelection: false
-        ) { result in
-            switch result {
-            case .success(let urls):
-                if let url = urls.first {
-                    appState.selectRootFolder(url)
+        .alert(
+            "Library Export",
+            isPresented: Binding(
+                get: { exportMessage != nil },
+                set: { if !$0 { exportMessage = nil } }
+            )
+        ) {
+            if let exportedURL {
+                Button("Show in Finder") {
+                    FinderRevealService.reveal(exportedURL)
                 }
-            case .failure(let error):
-                appState.setupErrorMessage = error.localizedDescription
             }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportMessage ?? "")
+        }
+    }
+
+    private var activeSubjects: [Subject] {
+        subjects.filter { $0.deletedAt == nil }
+    }
+
+    private var activePapers: [Paper] {
+        let activeSubjectIDs = Set(activeSubjects.map(\.id))
+        return papers.filter { $0.deletedAt == nil && activeSubjectIDs.contains($0.subjectID) }
+    }
+
+    private var activeFlaggedQuestions: [FlaggedQuestion] {
+        let activePaperIDs = Set(activePapers.map(\.id))
+        return flaggedQuestions.filter {
+            $0.deletedAt == nil && activePaperIDs.contains($0.paperID)
+        }
+    }
+
+    private func exportLibrary() {
+        guard let rootURL = appState.rootFolderURL else {
+            exportMessage = "The app storage folder is unavailable."
+            return
+        }
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.folder]
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Export"
+
+        guard panel.runModal() == .OK, let destinationURL = panel.url else { return }
+
+        do {
+            exportedURL = try LibraryExportService(rootURL: rootURL).exportLibrary(
+                subjects: activeSubjects,
+                papers: activePapers,
+                flaggedQuestions: activeFlaggedQuestions,
+                to: destinationURL
+            )
+            exportMessage = "Library exported successfully."
+        } catch {
+            exportedURL = nil
+            exportMessage = error.localizedDescription
         }
     }
 

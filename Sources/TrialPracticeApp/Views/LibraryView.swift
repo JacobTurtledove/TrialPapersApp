@@ -13,6 +13,8 @@ struct LibraryView: View {
     @State private var isAddingSubject = false
     @State private var subjectToRename: Subject?
     @State private var errorMessage: String?
+    @State private var exportMessage: String?
+    @State private var exportedURL: URL?
 
     private let columns = [
         GridItem(.adaptive(minimum: 190, maximum: 240), spacing: 20)
@@ -20,6 +22,18 @@ struct LibraryView: View {
 
     private var activeSubjects: [Subject] {
         allSubjects.filter { $0.deletedAt == nil }
+    }
+
+    private var activePapers: [Paper] {
+        let subjectIDs = Set(activeSubjects.map(\.id))
+        return papers.filter { $0.deletedAt == nil && subjectIDs.contains($0.subjectID) }
+    }
+
+    private var activeFlaggedQuestions: [FlaggedQuestion] {
+        let paperIDs = Set(activePapers.map(\.id))
+        return flaggedQuestions.filter {
+            $0.deletedAt == nil && paperIDs.contains($0.paperID)
+        }
     }
 
     var body: some View {
@@ -54,6 +68,9 @@ struct LibraryView: View {
                                 Button("Show Papers in Finder") {
                                     revealFolder("Papers/\(subject.filenameValue)")
                                 }
+                                Button("Export Subject") {
+                                    exportSubject(subject)
+                                }
                                 Button("Rename Subject") {
                                     subjectToRename = subject
                                 }
@@ -69,10 +86,19 @@ struct LibraryView: View {
         }
         .navigationTitle("Library")
         .toolbar {
-            Button {
-                isAddingSubject = true
-            } label: {
-                Label("New Subject", systemImage: "folder.badge.plus")
+            HStack {
+                Button {
+                    exportLibrary()
+                } label: {
+                    Label("Export Library", systemImage: "square.and.arrow.up")
+                }
+                .disabled(activePapers.isEmpty && activeFlaggedQuestions.isEmpty)
+
+                Button {
+                    isAddingSubject = true
+                } label: {
+                    Label("New Subject", systemImage: "folder.badge.plus")
+                }
             }
         }
         .sheet(isPresented: $isAddingSubject) {
@@ -100,11 +126,27 @@ struct LibraryView: View {
         } message: {
             Text(errorMessage ?? "")
         }
+        .alert(
+            "Library Export",
+            isPresented: Binding(
+                get: { exportMessage != nil },
+                set: { if !$0 { exportMessage = nil } }
+            )
+        ) {
+            if let exportedURL {
+                Button("Show in Finder") {
+                    FinderRevealService.reveal(exportedURL)
+                }
+            }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportMessage ?? "")
+        }
     }
 
     private func revealFolder(_ relativePath: String) {
         guard let rootURL = appState.rootFolderURL else {
-            errorMessage = "Reconnect the app data folder in Settings."
+            errorMessage = "The app storage folder is unavailable."
             return
         }
         do {
@@ -118,7 +160,7 @@ struct LibraryView: View {
     }
 
     private func paperCountDescription(for subject: Subject) -> String {
-        let count = papers.filter { $0.subjectID == subject.id }.count
+        let count = activePapers.filter { $0.subjectID == subject.id }.count
         return "\(count) paper\(count == 1 ? "" : "s")"
     }
 
@@ -136,7 +178,7 @@ struct LibraryView: View {
             return "A subject with this name already exists."
         }
         guard let rootURL = appState.rootFolderURL else {
-            return "The data folder is unavailable. Reconnect it in Settings."
+            return "The app storage folder is unavailable."
         }
 
         let subject = Subject(
@@ -171,7 +213,7 @@ struct LibraryView: View {
             return "A subject with this name already exists."
         }
         guard let rootURL = appState.rootFolderURL else {
-            return "The data folder is unavailable. Reconnect it in Settings."
+            return "The app storage folder is unavailable."
         }
 
         let oldDisplayName = subject.displayName
@@ -271,6 +313,46 @@ struct LibraryView: View {
         }
     }
 
+    private func exportLibrary() {
+        guard let rootURL = appState.rootFolderURL else {
+            exportMessage = "The app storage folder is unavailable."
+            return
+        }
+        guard let destinationURL = chooseExportFolder() else { return }
+        do {
+            exportedURL = try LibraryExportService(rootURL: rootURL).exportLibrary(
+                subjects: activeSubjects,
+                papers: activePapers,
+                flaggedQuestions: activeFlaggedQuestions,
+                to: destinationURL
+            )
+            exportMessage = "Library exported successfully."
+        } catch {
+            exportedURL = nil
+            exportMessage = error.localizedDescription
+        }
+    }
+
+    private func exportSubject(_ subject: Subject) {
+        guard let rootURL = appState.rootFolderURL else {
+            exportMessage = "The app storage folder is unavailable."
+            return
+        }
+        guard let destinationURL = chooseExportFolder() else { return }
+        do {
+            exportedURL = try LibraryExportService(rootURL: rootURL).exportSubject(
+                subject,
+                papers: activePapers,
+                flaggedQuestions: activeFlaggedQuestions,
+                to: destinationURL
+            )
+            exportMessage = "Subject exported successfully."
+        } catch {
+            exportedURL = nil
+            exportMessage = error.localizedDescription
+        }
+    }
+
     private func replaceSubjectFolder(
         in relativePath: String,
         topLevel: String,
@@ -289,6 +371,7 @@ private struct SubjectLibraryView: View {
     @EnvironmentObject private var navigationCoordinator: AppNavigationCoordinator
     @Query(sort: \School.displayName) private var schools: [School]
     @Query(sort: \Paper.year, order: .reverse) private var papers: [Paper]
+    @Query private var flaggedQuestions: [FlaggedQuestion]
 
     let subject: Subject
     @State private var isAddingPaper = false
@@ -303,7 +386,14 @@ private struct SubjectLibraryView: View {
     ]
 
     private var subjectPapers: [Paper] {
-        papers.filter { $0.subjectID == subject.id }
+        papers.filter { $0.subjectID == subject.id && $0.deletedAt == nil }
+    }
+
+    private var activeFlaggedQuestions: [FlaggedQuestion] {
+        let paperIDs = Set(subjectPapers.map(\.id))
+        return flaggedQuestions.filter {
+            $0.deletedAt == nil && $0.subjectID == subject.id && paperIDs.contains($0.paperID)
+        }
     }
 
     private var schoolFolders: [(school: School, papers: [Paper])] {
@@ -357,6 +447,9 @@ private struct SubjectLibraryView: View {
                                 Button("Show Papers in Finder") {
                                     revealSchoolFolder(folder.school)
                                 }
+                                Button("Export School Folder") {
+                                    exportSchoolFolder(folder.school)
+                                }
                                 Button("Use Curated Crest") {
                                     useCuratedCrest(for: folder.school)
                                 }
@@ -377,6 +470,9 @@ private struct SubjectLibraryView: View {
                                 if let sourceURL = curatedCrestSources[folder.school.id] {
                                     Link("View Crest Source", destination: sourceURL)
                                 }
+                                Button("Move School to Bin", role: .destructive) {
+                                    moveSchoolToBin(folder.school)
+                                }
                             }
                         }
                     }
@@ -387,6 +483,13 @@ private struct SubjectLibraryView: View {
         .navigationTitle(subject.displayName)
         .toolbar {
             HStack {
+                Button {
+                    exportSubject()
+                } label: {
+                    Label("Export Subject", systemImage: "square.and.arrow.up")
+                }
+                .disabled(subjectPapers.isEmpty && activeFlaggedQuestions.isEmpty)
+
                 Button {
                     exportCSV()
                 } label: {
@@ -451,7 +554,7 @@ private struct SubjectLibraryView: View {
 
     private func revealStoredItem(_ relativePath: String) {
         guard let rootURL = appState.rootFolderURL else {
-            crestErrorMessage = "Reconnect the app data folder in Settings."
+            crestErrorMessage = "The app storage folder is unavailable."
             return
         }
         do {
@@ -570,6 +673,72 @@ private struct SubjectLibraryView: View {
             exportMessage = error.localizedDescription
         }
     }
+
+    private func exportSubject() {
+        guard let rootURL = appState.rootFolderURL else {
+            exportMessage = "The app storage folder is unavailable."
+            return
+        }
+        guard let destinationURL = chooseExportFolder() else { return }
+        do {
+            exportedCSVURL = try LibraryExportService(rootURL: rootURL).exportSubject(
+                subject,
+                papers: subjectPapers,
+                flaggedQuestions: activeFlaggedQuestions,
+                to: destinationURL
+            )
+            exportMessage = "Subject exported successfully."
+        } catch {
+            exportedCSVURL = nil
+            exportMessage = error.localizedDescription
+        }
+    }
+
+    private func exportSchoolFolder(_ school: School) {
+        guard let rootURL = appState.rootFolderURL else {
+            exportMessage = "The app storage folder is unavailable."
+            return
+        }
+        guard let destinationURL = chooseExportFolder() else { return }
+        do {
+            exportedCSVURL = try LibraryExportService(rootURL: rootURL).exportSchoolFolder(
+                subject: subject,
+                school: school,
+                papers: subjectPapers,
+                flaggedQuestions: activeFlaggedQuestions,
+                to: destinationURL
+            )
+            exportMessage = "School folder exported successfully."
+        } catch {
+            exportedCSVURL = nil
+            exportMessage = error.localizedDescription
+        }
+    }
+
+    private func moveSchoolToBin(_ school: School) {
+        let affectedPapers = subjectPapers.filter {
+            $0.subjectID == subject.id && $0.schoolID == school.id
+        }
+        let affectedPaperIDs = Set(affectedPapers.map(\.id))
+        let affectedQuestions = activeFlaggedQuestions.filter {
+            affectedPaperIDs.contains($0.paperID)
+        }
+        let deletedAt = Date.now
+        let paperSnapshots = affectedPapers.map { ($0, $0.deletedAt) }
+        let questionSnapshots = affectedQuestions.map { ($0, $0.deletedAt) }
+
+        affectedPapers.forEach { $0.deletedAt = deletedAt }
+        affectedQuestions.forEach { $0.deletedAt = deletedAt }
+
+        do {
+            try modelContext.save()
+        } catch {
+            paperSnapshots.forEach { $0.0.deletedAt = $0.1 }
+            questionSnapshots.forEach { $0.0.deletedAt = $0.1 }
+            modelContext.rollback()
+            exportMessage = error.localizedDescription
+        }
+    }
 }
 
 private struct SchoolLibraryView: View {
@@ -586,6 +755,8 @@ private struct SchoolLibraryView: View {
     @State private var isAddingPaper = false
     @State private var paperToDelete: Paper?
     @State private var deletionError: String?
+    @State private var exportMessage: String?
+    @State private var exportedURL: URL?
 
     private let columns = [
         GridItem(.adaptive(minimum: 220, maximum: 290), spacing: 20)
@@ -593,7 +764,14 @@ private struct SchoolLibraryView: View {
 
     private var papers: [Paper] {
         allPapers.filter {
-            $0.subjectID == subject.id && $0.schoolID == school.id
+            $0.subjectID == subject.id && $0.schoolID == school.id && $0.deletedAt == nil
+        }
+    }
+
+    private var activeFlaggedQuestions: [FlaggedQuestion] {
+        let paperIDs = Set(papers.map(\.id))
+        return flaggedQuestions.filter {
+            $0.deletedAt == nil && paperIDs.contains($0.paperID)
         }
     }
 
@@ -634,7 +812,7 @@ private struct SchoolLibraryView: View {
                                     PaperLibraryCard(
                                         paper: paper,
                                         flaggedCount: flaggedQuestions.filter {
-                                            $0.paperID == paper.id
+                                            $0.paperID == paper.id && $0.deletedAt == nil
                                         }.count
                                     )
                                 }
@@ -652,6 +830,9 @@ private struct SchoolLibraryView: View {
                                 Button("Show in Finder") {
                                     reveal(paper)
                                 }
+                                Button("Export PDF") {
+                                    exportPaper(paper)
+                                }
                                 Button("Delete Paper", role: .destructive) {
                                     paperToDelete = paper
                                 }
@@ -665,6 +846,13 @@ private struct SchoolLibraryView: View {
         .navigationTitle(school.displayName)
         .toolbar {
             HStack {
+                Button {
+                    exportSchoolFolder()
+                } label: {
+                    Label("Export School Folder", systemImage: "square.and.arrow.up")
+                }
+                .disabled(papers.isEmpty && activeFlaggedQuestions.isEmpty)
+
                 Button {
                     isAddingPaper = true
                 } label: {
@@ -697,7 +885,7 @@ private struct SchoolLibraryView: View {
                 deletePaper()
             }
         } message: {
-            Text("The paper, its PDFs, and its flagged questions will be permanently deleted.")
+            Text("The paper and its flagged questions will move to the Bin. Stored files will remain in Application Support.")
         }
         .alert(
             "Paper Error",
@@ -710,11 +898,27 @@ private struct SchoolLibraryView: View {
         } message: {
             Text(deletionError ?? "")
         }
+        .alert(
+            "Export",
+            isPresented: Binding(
+                get: { exportMessage != nil },
+                set: { if !$0 { exportMessage = nil } }
+            )
+        ) {
+            if let exportedURL {
+                Button("Show in Finder") {
+                    FinderRevealService.reveal(exportedURL)
+                }
+            }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportMessage ?? "")
+        }
     }
 
     private func reveal(_ paper: Paper) {
         guard let rootURL = appState.rootFolderURL else {
-            deletionError = "Reconnect the app data folder in Settings."
+            deletionError = "The app storage folder is unavailable."
             return
         }
         do {
@@ -746,27 +950,71 @@ private struct SchoolLibraryView: View {
     }
 
     private func deletePaper() {
-        guard let paper = paperToDelete, let rootURL = appState.rootFolderURL else {
+        guard let paper = paperToDelete else {
             return
         }
         let relatedQuestions = flaggedQuestions.filter { $0.paperID == paper.id }
-        let relatedImportRecords = importRecords.filter { $0.paperID == paper.id }
-        var transaction: LocalFileStore.DeletionTransaction?
+        let oldPaperDeletedAt = paper.deletedAt
+        let questionSnapshots = relatedQuestions.map { ($0, $0.deletedAt) }
+        let deletedAt = Date.now
         do {
-            transaction = try LocalFileStore(rootURL: rootURL).stageDeletion(
-                for: paper,
-                flaggedQuestions: relatedQuestions
-            )
-            relatedQuestions.forEach(modelContext.delete)
-            relatedImportRecords.forEach(modelContext.delete)
-            modelContext.delete(paper)
+            paper.deletedAt = deletedAt
+            relatedQuestions.forEach { $0.deletedAt = deletedAt }
             try modelContext.save()
-            try? transaction?.commit()
             paperToDelete = nil
         } catch {
+            paper.deletedAt = oldPaperDeletedAt
+            questionSnapshots.forEach { $0.0.deletedAt = $0.1 }
             modelContext.rollback()
-            try? transaction?.rollback()
             deletionError = error.localizedDescription
+        }
+    }
+
+    private func exportSchoolFolder() {
+        guard let rootURL = appState.rootFolderURL else {
+            exportMessage = "The app storage folder is unavailable."
+            return
+        }
+        guard let destinationURL = chooseExportFolder() else { return }
+        do {
+            exportedURL = try LibraryExportService(rootURL: rootURL).exportSchoolFolder(
+                subject: subject,
+                school: school,
+                papers: papers,
+                flaggedQuestions: activeFlaggedQuestions,
+                to: destinationURL
+            )
+            exportMessage = "School folder exported successfully."
+        } catch {
+            exportedURL = nil
+            exportMessage = error.localizedDescription
+        }
+    }
+
+    private func exportPaper(_ paper: Paper) {
+        guard let rootURL = appState.rootFolderURL else {
+            exportMessage = "The app storage folder is unavailable."
+            return
+        }
+        let savePanel = NSSavePanel()
+        savePanel.allowedContentTypes = [.pdf]
+        savePanel.canCreateDirectories = true
+        let storedPath = paper.combinedPDFRelativePath ?? paper.questionPDFRelativePath
+        savePanel.nameFieldStringValue = (storedPath as NSString).lastPathComponent
+
+        guard savePanel.runModal() == .OK, let destinationURL = savePanel.url else {
+            return
+        }
+
+        do {
+            exportedURL = try LibraryExportService(rootURL: rootURL).exportPaper(
+                paper,
+                to: destinationURL
+            )
+            exportMessage = "PDF exported successfully."
+        } catch {
+            exportedURL = nil
+            exportMessage = error.localizedDescription
         }
     }
 }
@@ -810,17 +1058,10 @@ private struct SchoolFolderCard: View {
     let fallbackColor: Color
     let curatedCrest: NSImage?
 
-    private var crestImage: NSImage? {
-        if let data = school.crestImageData {
-            return NSImage(data: data)
-        }
-        return curatedCrest
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let crestImage {
-                Image(nsImage: crestImage)
+            if let curatedCrest {
+                Image(nsImage: curatedCrest)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 64, height: 64)
@@ -959,4 +1200,16 @@ private struct SubjectEditor: View {
             dismiss()
         }
     }
+}
+
+@MainActor
+private func chooseExportFolder() -> URL? {
+    let panel = NSOpenPanel()
+    panel.allowedContentTypes = [.folder]
+    panel.canChooseFiles = false
+    panel.canChooseDirectories = true
+    panel.canCreateDirectories = true
+    panel.allowsMultipleSelection = false
+    panel.prompt = "Export"
+    return panel.runModal() == .OK ? panel.url : nil
 }

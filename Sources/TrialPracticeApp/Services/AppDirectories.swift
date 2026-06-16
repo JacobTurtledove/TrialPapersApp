@@ -21,6 +21,14 @@ enum AppDirectories {
         }
     }
 
+    static var fileStorageURL: URL {
+        get throws {
+            let url = try applicationSupport.appending(path: "Files", directoryHint: .isDirectory)
+            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            return url
+        }
+    }
+
     static func removeCaches() throws {
         try removeContents(of: caches)
     }
