@@ -61,6 +61,15 @@ struct SchoolCrestLookupServiceTests {
     }
 
     @Test
+    func defaultLookupFindsDevelopmentPackWhenRunningFromSwiftPM() throws {
+        let result = try #require(
+            try SchoolCrestLookupService().findCrest(for: "James Ruse")
+        )
+
+        #expect(NSImage(contentsOf: result.imageURL) != nil)
+    }
+
+    @Test
     func productionPackContainsSeventyReadableImages() throws {
         let repositoryURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

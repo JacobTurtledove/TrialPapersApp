@@ -93,10 +93,7 @@ struct SchoolCrestLookupService: Sendable {
     }
 
     private static var bundledPackURL: URL? {
-        Bundle.main.resourceURL?.appending(
-            path: "School Crest Pack",
-            directoryHint: .isDirectory
-        )
+        packCandidates.first { isReadablePack(at: $0) }
     }
 
     private func loadManifest(from packURL: URL) throws -> Manifest {
@@ -109,10 +106,78 @@ struct SchoolCrestLookupService: Sendable {
         return manifest
     }
 
+    private static var packCandidates: [URL] {
+        var urls: [URL] = []
+
+        if let bundledURL = Bundle.main.url(
+            forResource: "School Crest Pack",
+            withExtension: nil
+        ) {
+            urls.append(bundledURL)
+        }
+
+        if let resourceURL = Bundle.main.resourceURL {
+            urls.append(
+                resourceURL.appending(
+                    path: "School Crest Pack",
+                    directoryHint: .isDirectory
+                )
+            )
+        }
+
+        if let executableURL = Bundle.main.executableURL {
+            urls.append(contentsOf: developmentPackCandidates(from: executableURL))
+        }
+
+        urls.append(contentsOf: developmentPackCandidates(from: URL(fileURLWithPath: #filePath)))
+
+        return urls.uniquedByStandardizedFilePath()
+    }
+
+    private static func developmentPackCandidates(from url: URL) -> [URL] {
+        var candidates: [URL] = []
+        var directory = url.standardizedFileURL
+        if !directory.hasDirectoryPath {
+            directory.deleteLastPathComponent()
+        }
+
+        while directory.path != "/" {
+            candidates.append(
+                directory.appending(
+                    path: "School Crest Pack",
+                    directoryHint: .isDirectory
+                )
+            )
+            directory.deleteLastPathComponent()
+        }
+
+        return candidates
+    }
+
+    private static func isReadablePack(at url: URL) -> Bool {
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            return false
+        }
+        return FileManager.default.isReadableFile(
+            atPath: url.appending(path: "manifest.json").path
+        )
+    }
+
     private static func normalized(_ value: String) -> String {
         value.unicodeScalars
             .filter(CharacterSet.alphanumerics.contains)
             .map { String($0).lowercased() }
             .joined()
+    }
+}
+
+private extension Array where Element == URL {
+    func uniquedByStandardizedFilePath() -> [URL] {
+        var seen: Set<String> = []
+        return filter { url in
+            seen.insert(url.standardizedFileURL.path).inserted
+        }
     }
 }
