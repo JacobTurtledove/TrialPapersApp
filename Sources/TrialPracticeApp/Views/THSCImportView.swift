@@ -296,50 +296,60 @@ struct THSCImportView: View {
                 description: Text(showAlreadyImported ? "No papers match the current filters." : "All matching papers have already been imported or no papers match the current filters.")
             )
         } else {
-            List(schoolGroups) { group in
-                DisclosureGroup(
-                    isExpanded: Binding(
-                        get: { expandedSchoolIDs.contains(group.id) },
-                        set: { isExpanded in
-                            if isExpanded {
-                                expandedSchoolIDs.insert(group.id)
-                            } else {
-                                expandedSchoolIDs.remove(group.id)
-                            }
-                        }
-                    )
-                ) {
-                    ForEach(group.papers) { paper in
-                        paperRow(paper)
-                    }
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: expandedSchoolIDs.contains(group.id) ? "folder.fill.badge.minus" : "folder.fill")
-                            .foregroundStyle(.tint)
-                            .frame(width: 24)
+            List {
+                ForEach(schoolGroups) { group in
+                    schoolGroupRow(group)
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(group.schoolName)
-                                .font(.headline)
-                            Text("\(group.papers.count) paper\(group.papers.count == 1 ? "" : "s")")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Spacer()
-
-                        let selectedCount = group.papers.filter { selection.contains($0.id) }.count
-                        if selectedCount > 0 {
-                            Text("\(selectedCount) selected")
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(.tint)
+                    if expandedSchoolIDs.contains(group.id) {
+                        ForEach(group.papers) { paper in
+                            paperRow(paper)
+                                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                                .transition(.opacity)
                         }
                     }
-                    .padding(.vertical, 6)
                 }
-                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
             }
             .listStyle(.inset)
+        }
+    }
+
+    private func schoolGroupRow(_ group: THSCSchoolPaperGroup) -> some View {
+        let isExpanded = expandedSchoolIDs.contains(group.id)
+        let selectedCount = group.papers.filter { selection.contains($0.id) }.count
+
+        return HStack(spacing: 10) {
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                .animation(.easeOut(duration: 0.12), value: isExpanded)
+                .frame(width: 14)
+
+            Image(systemName: isExpanded ? "folder.fill.badge.minus" : "folder.fill")
+                .foregroundStyle(.tint)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(group.schoolName)
+                    .font(.headline)
+                Text("\(group.papers.count) paper\(group.papers.count == 1 ? "" : "s")")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            if selectedCount > 0 {
+                Text("\(selectedCount) selected")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.tint)
+            }
+        }
+        .padding(.vertical, 6)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            toggleSchoolGroup(group.id)
         }
     }
 
@@ -462,6 +472,16 @@ struct THSCImportView: View {
     private func isImported(_ listing: THSCPaperListing) -> Bool {
         importIdentifiersForSelectedSource.contains(listing.id) ||
             importIdentifiersForSelectedSource.contains(listing.legacyIdentifier)
+    }
+
+    private func toggleSchoolGroup(_ id: String) {
+        withAnimation(.easeOut(duration: 0.12)) {
+            if expandedSchoolIDs.contains(id) {
+                expandedSchoolIDs.remove(id)
+            } else {
+                expandedSchoolIDs.insert(id)
+            }
+        }
     }
 
     private func hasLocalPaperConflict(_ listing: THSCPaperListing) -> Bool {
