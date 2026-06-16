@@ -33,8 +33,8 @@ struct PaperViewerScreen: View {
     @State private var showExportResult = false
     @State private var exportedURL: URL?
     @State private var showDuplicateWarning = false
-    @State private var isChoosingSolutionsStart = false
-    @State private var showSolutionsSetupPrompt = false
+    @State private var showSolutionsStartPicker = false
+    @State private var selectedSolutionsStartPage = 1
     @StateObject private var questionController = PDFViewerController()
     @StateObject private var solutionController = PDFViewerController()
 
@@ -54,6 +54,11 @@ struct PaperViewerScreen: View {
         paper.solutionsStartPage.map { .solutions(from: $0) } ?? .all
     }
 
+    private var paperPageCount: Int? {
+        guard let questionURL else { return nil }
+        return PDFDocument(url: questionURL)?.pageCount
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             viewerToolbar
@@ -68,22 +73,31 @@ struct PaperViewerScreen: View {
         .onAppear {
             if paper.hasSolutions != false, paper.solutionsStartPage == nil {
                 viewingMode = .questions
-                showSolutionsSetupPrompt = true
+                presentSolutionsStartPicker()
+            } else if paper.hasSolutions != false {
+                viewingMode = .both
+            } else {
+                viewingMode = .questions
             }
         }
-        .alert("Where Do Solutions Start?", isPresented: $showSolutionsSetupPrompt) {
-            Button("Select First Solutions Page") {
-                viewingMode = .questions
-                isChoosingSolutionsStart = true
+        .sheet(isPresented: $showSolutionsStartPicker) {
+            if let questionURL, let paperPageCount {
+                SolutionsStartPagePickerSheet(
+                    url: questionURL,
+                    pageCount: paperPageCount,
+                    selectedPage: $selectedSolutionsStartPage,
+                    allowsCancel: paper.solutionsStartPage != nil || paper.hasSolutions != nil,
+                    cancel: {
+                        showSolutionsStartPicker = false
+                    },
+                    markNoSolutions: {
+                        saveNoSolutions()
+                    },
+                    confirm: {
+                        saveSolutionsStartPage(selectedSolutionsStartPage)
+                    }
+                )
             }
-            Button("This Paper Has No Solutions") {
-                saveNoSolutions()
-            }
-            if paper.solutionsStartPage != nil || paper.hasSolutions != nil {
-                Button("Cancel", role: .cancel) {}
-            }
-        } message: {
-            Text("This app keeps questions and solutions in one PDF. If the PDF includes solutions, choose the first page where solutions begin so the viewer can show Questions, Solutions, or Both. If there are no solutions, choose “This Paper Has No Solutions”.")
         }
         .alert("Question Already Flagged", isPresented: $showDuplicateWarning) {
             Button("Cancel", role: .cancel) {}
@@ -152,11 +166,11 @@ struct PaperViewerScreen: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .frame(maxWidth: 360)
-            .disabled(isFlaggingQuestion || isChoosingSolutionsStart)
+            .disabled(isFlaggingQuestion)
 
             Button("Change Solutions Start") {
                 viewingMode = .questions
-                showSolutionsSetupPrompt = true
+                presentSolutionsStartPicker()
             }
             .disabled(isFlaggingQuestion || questionURL == nil)
 
@@ -318,10 +332,9 @@ struct PaperViewerScreen: View {
         case .questions:
             documentView(
                 url: questionURL,
-                selection: isChoosingSolutionsStart ? .all : questionSelection,
+                selection: questionSelection,
                 controller: questionController,
-                label: "question paper",
-                allowsBoundarySelection: isChoosingSolutionsStart
+                label: "question paper"
             )
         case .solutions:
             documentView(
@@ -379,27 +392,14 @@ struct PaperViewerScreen: View {
         url: URL?,
         selection: PDFPageSelection,
         controller: PDFViewerController,
-        label: String,
-        allowsBoundarySelection: Bool = false
+        label: String
     ) -> some View {
         if let url {
-            if allowsBoundarySelection {
-                PDFViewerView(
-                    url: url,
-                    selection: selection,
-                    pageSelectionEnabled: true,
-                    onPageSelected: { pageNumber in
-                        saveSolutionsStartPage(pageNumber)
-                    },
-                    controller: controller
-                )
-            } else {
-                PDFViewerView(
-                    url: url,
-                    selection: selection,
-                    controller: controller
-                )
-            }
+            PDFViewerView(
+                url: url,
+                selection: selection,
+                controller: controller
+            )
         } else {
             ContentUnavailableView(
                 "PDF Not Found",
@@ -409,6 +409,15 @@ struct PaperViewerScreen: View {
                 )
             )
         }
+    }
+
+    private func presentSolutionsStartPicker() {
+        guard let pageCount = paperPageCount else { return }
+        selectedSolutionsStartPage = min(
+            pageCount,
+            max(1, paper.solutionsStartPage ?? min(max(2, pageCount / 2), pageCount))
+        )
+        showSolutionsStartPicker = true
     }
 
     private func saveSolutionsStartPage(_ pageNumber: Int) {
@@ -423,8 +432,8 @@ struct PaperViewerScreen: View {
         paper.hasSolutions = true
         do {
             try modelContext.save()
-            isChoosingSolutionsStart = false
-            viewingMode = .questions
+            showSolutionsStartPicker = false
+            viewingMode = .both
         } catch {
             modelContext.rollback()
             captureError = error.localizedDescription
@@ -435,7 +444,7 @@ struct PaperViewerScreen: View {
         paper.solutionsStartPage = nil
         paper.hasSolutions = false
         viewingMode = .questions
-        isChoosingSolutionsStart = false
+        showSolutionsStartPicker = false
         do {
             try modelContext.save()
         } catch {
@@ -637,5 +646,138 @@ struct PaperViewerScreen: View {
             exportMessage = error.localizedDescription
         }
         showExportResult = true
+    }
+}
+
+private struct SolutionsStartPagePickerSheet: View {
+    let url: URL
+    let pageCount: Int
+    @Binding var selectedPage: Int
+    @FocusState private var isKeyboardNavigationFocused: Bool
+    let allowsCancel: Bool
+    let cancel: () -> Void
+    let markNoSolutions: () -> Void
+    let confirm: () -> Void
+
+    private var canMoveBackward: Bool {
+        selectedPage > 1
+    }
+
+    private var canMoveForward: Bool {
+        selectedPage < pageCount
+    }
+
+    private var sliderValue: Binding<Double> {
+        Binding(
+            get: { Double(selectedPage) },
+            set: { selectedPage = clampedPage(Int($0.rounded())) }
+        )
+    }
+
+    private var pageTextValue: Binding<Int> {
+        Binding(
+            get: { selectedPage },
+            set: { selectedPage = clampedPage($0) }
+        )
+    }
+
+    private func previousPage() {
+        selectedPage = clampedPage(selectedPage - 1)
+    }
+
+    private func nextPage() {
+        selectedPage = clampedPage(selectedPage + 1)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Select the first page with solutions")
+                    .font(.title3.weight(.semibold))
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 18)
+            .padding(.bottom, 12)
+
+            Divider()
+
+            PDFPagePreviewView(url: url, pageNumber: selectedPage)
+                .frame(width: 540, height: 620)
+                .background(Color(nsColor: .windowBackgroundColor))
+
+            Divider()
+
+            VStack(spacing: 14) {
+                HStack(spacing: 12) {
+                    Button {
+                        previousPage()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                    }
+                    .disabled(!canMoveBackward)
+                    .help("Previous page")
+
+                    Text("Page")
+                        .foregroundStyle(.secondary)
+
+                    TextField("Page", value: pageTextValue, format: .number)
+                        .textFieldStyle(.roundedBorder)
+                        .multilineTextAlignment(.center)
+                        .frame(width: 72)
+
+                    Text("of \(pageCount)")
+                        .foregroundStyle(.secondary)
+
+                    Button {
+                        nextPage()
+                    } label: {
+                        Image(systemName: "chevron.right")
+                    }
+                    .disabled(!canMoveForward)
+                    .help("Next page")
+
+                    Slider(
+                        value: sliderValue,
+                        in: 1...Double(max(pageCount, 1))
+                    )
+                }
+
+                HStack {
+                    Button("This Paper Has No Solutions", action: markNoSolutions)
+
+                    Spacer()
+
+                    if allowsCancel {
+                        Button("Cancel", role: .cancel, action: cancel)
+                    }
+
+                    Button("This is the first solutions page", action: confirm)
+                        .buttonStyle(.borderedProminent)
+                        .disabled(selectedPage <= 1)
+                }
+            }
+            .padding(20)
+        }
+        .frame(width: 580)
+        .focusable()
+        .focused($isKeyboardNavigationFocused)
+        .onAppear {
+            isKeyboardNavigationFocused = true
+        }
+        .onMoveCommand { direction in
+            switch direction {
+            case .left, .up:
+                previousPage()
+            case .right, .down:
+                nextPage()
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    private func clampedPage(_ page: Int) -> Int {
+        min(max(page, 1), max(pageCount, 1))
     }
 }
