@@ -45,6 +45,7 @@ struct MainNavigationView: View {
                     .tag(item)
             }
             .navigationTitle("Trial Revision")
+            .navigationSplitViewColumnWidth(min: 200, ideal: 200, max: 200)
         } detail: {
             NavigationStack(path: $detailPath) {
                 switch navigationCoordinator.selection ?? .library {
