@@ -1,0 +1,98 @@
+import SwiftUI
+
+extension PaperViewerScreen {
+    @ViewBuilder
+    var viewerContent: some View {
+        switch viewingMode {
+        case .questions:
+            documentView(
+                url: questionURL,
+                selection: questionSelection,
+                controller: questionController,
+                label: "question paper"
+            )
+        case .solutions:
+            documentView(
+                url: solutionURL,
+                selection: solutionSelection,
+                controller: solutionController,
+                label: "solutions paper"
+            )
+        case .both:
+            HSplitView {
+                labeledDocumentView(
+                    title: "Questions",
+                    url: questionURL,
+                    selection: questionSelection,
+                    controller: questionController,
+                    label: "question paper"
+                )
+                labeledDocumentView(
+                    title: "Solutions",
+                    url: solutionURL,
+                    selection: solutionSelection,
+                    controller: solutionController,
+                    label: "solutions paper"
+                )
+            }
+        }
+    }
+
+    func labeledDocumentView(
+        title: String,
+        url: URL?,
+        selection: PDFPageSelection,
+        controller: PDFViewerController,
+        label: String
+    ) -> some View {
+        VStack(spacing: 0) {
+            Text(title)
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(.bar)
+            documentView(
+                url: url,
+                selection: selection,
+                controller: controller,
+                label: label
+            )
+        }
+        .frame(minWidth: 320)
+    }
+
+    @ViewBuilder
+    func documentView(
+        url: URL?,
+        selection: PDFPageSelection,
+        controller: PDFViewerController,
+        label: String
+    ) -> some View {
+        if let url {
+            let annotationSession = annotationSession(for: url)
+            PDFViewerView(
+                url: url,
+                sourceDocument: annotationSession?.document,
+                selection: selection,
+                drawingTool: activeDrawingTool,
+                penConfigurations: penConfigurations,
+                onAnnotationsChanged: {
+                    annotationSession?.markDirty()
+                },
+                onAnnotationError: { message in
+                    paperUpdateError = message
+                },
+                controller: controller
+            )
+        } else {
+            ContentUnavailableView(
+                "PDF Not Found",
+                systemImage: "doc.badge.exclamationmark",
+                description: Text(
+                    "The \(label) has been moved or deleted. Restore it in the app data folder."
+                )
+            )
+        }
+    }
+}

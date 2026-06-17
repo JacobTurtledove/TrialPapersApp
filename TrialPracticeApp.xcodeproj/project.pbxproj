@@ -55,6 +55,32 @@
 		A10000000000000000000036 /* NESAPastPaperCatalogue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* NESAPastPaperCatalogue.swift */; };
 		A10000000000000000000037 /* StoredFilePath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000037 /* StoredFilePath.swift */; };
 		A10000000000000000000038 /* BinDeletionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000038 /* BinDeletionService.swift */; };
+		A10000000000000000000039 /* SubjectLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000039 /* SubjectLibraryView.swift */; };
+		A1000000000000000000003A /* SchoolLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003A /* SchoolLibraryView.swift */; };
+		A1000000000000000000003B /* LibraryExportFolderPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003B /* LibraryExportFolderPicker.swift */; };
+		A1000000000000000000003C /* FlaggedQuestionFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003C /* FlaggedQuestionFilters.swift */; };
+		A1000000000000000000003D /* FlaggedSubjectFolderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003D /* FlaggedSubjectFolderCard.swift */; };
+		A1000000000000000000003E /* FlaggedQuestionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003E /* FlaggedQuestionRow.swift */; };
+		A1000000000000000000003F /* StoredImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000003F /* StoredImage.swift */; };
+		A10000000000000000000040 /* FlaggedQuestionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000040 /* FlaggedQuestionDetailView.swift */; };
+		A10000000000000000000041 /* FlaggedQuestionExportFolderPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000041 /* FlaggedQuestionExportFolderPicker.swift */; };
+		A10000000000000000000042 /* SubjectFlaggedQuestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000042 /* SubjectFlaggedQuestionsView.swift */; };
+		A10000000000000000000043 /* PaperViewingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000043 /* PaperViewingMode.swift */; };
+		A10000000000000000000044 /* PaperViewerPenPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000044 /* PaperViewerPenPalette.swift */; };
+		A10000000000000000000045 /* PenCircle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000045 /* PenCircle.swift */; };
+		A10000000000000000000046 /* SolutionsStartPagePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000046 /* SolutionsStartPagePickerSheet.swift */; };
+		A10000000000000000000047 /* PaperViewerToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000047 /* PaperViewerToolbar.swift */; };
+		A10000000000000000000048 /* PaperViewerCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000048 /* PaperViewerCapture.swift */; };
+		A10000000000000000000049 /* PaperViewerDocumentContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000049 /* PaperViewerDocumentContent.swift */; };
+		A1000000000000000000004A /* PDFPageSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004A /* PDFPageSelection.swift */; };
+		A1000000000000000000004B /* PDFDocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004B /* PDFDocumentLoader.swift */; };
+		A1000000000000000000004C /* PDFAnnotationSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004C /* PDFAnnotationSession.swift */; };
+		A1000000000000000000004D /* PDFViewerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004D /* PDFViewerController.swift */; };
+		A1000000000000000000004E /* PDFPagePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004E /* PDFPagePreviewView.swift */; };
+		A1000000000000000000004F /* PDFCaptureOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004F /* PDFCaptureOverlayView.swift */; };
+		A10000000000000000000050 /* SelectablePDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000050 /* SelectablePDFView.swift */; };
+		A10000000000000000000051 /* PDFAnnotationEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000051 /* PDFAnnotationEditing.swift */; };
+		A10000000000000000000052 /* PDFDrawingTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000052 /* PDFDrawingTypes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -108,6 +134,32 @@
 		A20000000000000000000036 /* NESAPastPaperCatalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NESAPastPaperCatalogue.swift; sourceTree = "<group>"; };
 		A20000000000000000000037 /* StoredFilePath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredFilePath.swift; sourceTree = "<group>"; };
 		A20000000000000000000038 /* BinDeletionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinDeletionService.swift; sourceTree = "<group>"; };
+		A20000000000000000000039 /* SubjectLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectLibraryView.swift; sourceTree = "<group>"; };
+		A2000000000000000000003A /* SchoolLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolLibraryView.swift; sourceTree = "<group>"; };
+		A2000000000000000000003B /* LibraryExportFolderPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryExportFolderPicker.swift; sourceTree = "<group>"; };
+		A2000000000000000000003C /* FlaggedQuestionFilters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedQuestionFilters.swift; sourceTree = "<group>"; };
+		A2000000000000000000003D /* FlaggedSubjectFolderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedSubjectFolderCard.swift; sourceTree = "<group>"; };
+		A2000000000000000000003E /* FlaggedQuestionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedQuestionRow.swift; sourceTree = "<group>"; };
+		A2000000000000000000003F /* StoredImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredImage.swift; sourceTree = "<group>"; };
+		A20000000000000000000040 /* FlaggedQuestionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedQuestionDetailView.swift; sourceTree = "<group>"; };
+		A20000000000000000000041 /* FlaggedQuestionExportFolderPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedQuestionExportFolderPicker.swift; sourceTree = "<group>"; };
+		A20000000000000000000042 /* SubjectFlaggedQuestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectFlaggedQuestionsView.swift; sourceTree = "<group>"; };
+		A20000000000000000000043 /* PaperViewingMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperViewingMode.swift; sourceTree = "<group>"; };
+		A20000000000000000000044 /* PaperViewerPenPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperViewerPenPalette.swift; sourceTree = "<group>"; };
+		A20000000000000000000045 /* PenCircle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PenCircle.swift; sourceTree = "<group>"; };
+		A20000000000000000000046 /* SolutionsStartPagePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolutionsStartPagePickerSheet.swift; sourceTree = "<group>"; };
+		A20000000000000000000047 /* PaperViewerToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperViewerToolbar.swift; sourceTree = "<group>"; };
+		A20000000000000000000048 /* PaperViewerCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperViewerCapture.swift; sourceTree = "<group>"; };
+		A20000000000000000000049 /* PaperViewerDocumentContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperViewerDocumentContent.swift; sourceTree = "<group>"; };
+		A2000000000000000000004A /* PDFPageSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPageSelection.swift; sourceTree = "<group>"; };
+		A2000000000000000000004B /* PDFDocumentLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFDocumentLoader.swift; sourceTree = "<group>"; };
+		A2000000000000000000004C /* PDFAnnotationSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFAnnotationSession.swift; sourceTree = "<group>"; };
+		A2000000000000000000004D /* PDFViewerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFViewerController.swift; sourceTree = "<group>"; };
+		A2000000000000000000004E /* PDFPagePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPagePreviewView.swift; sourceTree = "<group>"; };
+		A2000000000000000000004F /* PDFCaptureOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFCaptureOverlayView.swift; sourceTree = "<group>"; };
+		A20000000000000000000050 /* SelectablePDFView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectablePDFView.swift; sourceTree = "<group>"; };
+		A20000000000000000000051 /* PDFAnnotationEditing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFAnnotationEditing.swift; sourceTree = "<group>"; };
+		A20000000000000000000052 /* PDFDrawingTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFDrawingTypes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -221,6 +273,15 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000033 /* PDFDrawingSupport.swift */,
+				A2000000000000000000004A /* PDFPageSelection.swift */,
+				A2000000000000000000004B /* PDFDocumentLoader.swift */,
+				A2000000000000000000004C /* PDFAnnotationSession.swift */,
+				A2000000000000000000004D /* PDFViewerController.swift */,
+				A2000000000000000000004E /* PDFPagePreviewView.swift */,
+				A2000000000000000000004F /* PDFCaptureOverlayView.swift */,
+				A20000000000000000000050 /* SelectablePDFView.swift */,
+				A20000000000000000000051 /* PDFAnnotationEditing.swift */,
+				A20000000000000000000052 /* PDFDrawingTypes.swift */,
 			);
 			path = PDF;
 			sourceTree = "<group>";
@@ -238,11 +299,27 @@
 			isa = PBXGroup;
 			children = (
 				A4000000000000000000000F /* Bin */,
+				A40000000000000000000010 /* FlaggedQuestions */,
 				A4000000000000000000000B /* Library */,
 				A4000000000000000000000E /* NESA */,
 				A4000000000000000000000A /* PaperImport */,
+				A40000000000000000000012 /* PaperViewer */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000012 /* PaperViewer */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000043 /* PaperViewingMode.swift */,
+				A20000000000000000000044 /* PaperViewerPenPalette.swift */,
+				A20000000000000000000045 /* PenCircle.swift */,
+				A20000000000000000000046 /* SolutionsStartPagePickerSheet.swift */,
+				A20000000000000000000047 /* PaperViewerToolbar.swift */,
+				A20000000000000000000048 /* PaperViewerCapture.swift */,
+				A20000000000000000000049 /* PaperViewerDocumentContent.swift */,
+			);
+			path = PaperViewer;
 			sourceTree = "<group>";
 		};
 		A4000000000000000000000F /* Bin */ = {
@@ -251,6 +328,28 @@
 				A20000000000000000000038 /* BinDeletionService.swift */,
 			);
 			path = Bin;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000010 /* FlaggedQuestions */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000042 /* SubjectFlaggedQuestionsView.swift */,
+				A20000000000000000000040 /* FlaggedQuestionDetailView.swift */,
+				A20000000000000000000041 /* FlaggedQuestionExportFolderPicker.swift */,
+				A2000000000000000000003C /* FlaggedQuestionFilters.swift */,
+				A40000000000000000000011 /* Components */,
+			);
+			path = FlaggedQuestions;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000011 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000003E /* FlaggedQuestionRow.swift */,
+				A2000000000000000000003F /* StoredImage.swift */,
+				A2000000000000000000003D /* FlaggedSubjectFolderCard.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		A4000000000000000000000E /* NESA */ = {
@@ -273,6 +372,9 @@
 		A4000000000000000000000B /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				A2000000000000000000003B /* LibraryExportFolderPicker.swift */,
+				A2000000000000000000003A /* SchoolLibraryView.swift */,
+				A20000000000000000000039 /* SubjectLibraryView.swift */,
 				A4000000000000000000000C /* Components */,
 			);
 			path = Library;
@@ -405,6 +507,32 @@
 				A10000000000000000000036 /* NESAPastPaperCatalogue.swift in Sources */,
 				A10000000000000000000037 /* StoredFilePath.swift in Sources */,
 				A10000000000000000000038 /* BinDeletionService.swift in Sources */,
+				A10000000000000000000039 /* SubjectLibraryView.swift in Sources */,
+				A1000000000000000000003A /* SchoolLibraryView.swift in Sources */,
+				A1000000000000000000003B /* LibraryExportFolderPicker.swift in Sources */,
+				A1000000000000000000003C /* FlaggedQuestionFilters.swift in Sources */,
+				A1000000000000000000003D /* FlaggedSubjectFolderCard.swift in Sources */,
+				A1000000000000000000003E /* FlaggedQuestionRow.swift in Sources */,
+				A1000000000000000000003F /* StoredImage.swift in Sources */,
+				A10000000000000000000040 /* FlaggedQuestionDetailView.swift in Sources */,
+				A10000000000000000000041 /* FlaggedQuestionExportFolderPicker.swift in Sources */,
+				A10000000000000000000042 /* SubjectFlaggedQuestionsView.swift in Sources */,
+				A10000000000000000000043 /* PaperViewingMode.swift in Sources */,
+				A10000000000000000000044 /* PaperViewerPenPalette.swift in Sources */,
+				A10000000000000000000045 /* PenCircle.swift in Sources */,
+				A10000000000000000000046 /* SolutionsStartPagePickerSheet.swift in Sources */,
+				A10000000000000000000047 /* PaperViewerToolbar.swift in Sources */,
+				A10000000000000000000048 /* PaperViewerCapture.swift in Sources */,
+				A10000000000000000000049 /* PaperViewerDocumentContent.swift in Sources */,
+				A1000000000000000000004A /* PDFPageSelection.swift in Sources */,
+				A1000000000000000000004B /* PDFDocumentLoader.swift in Sources */,
+				A1000000000000000000004C /* PDFAnnotationSession.swift in Sources */,
+				A1000000000000000000004D /* PDFViewerController.swift in Sources */,
+				A1000000000000000000004E /* PDFPagePreviewView.swift in Sources */,
+				A1000000000000000000004F /* PDFCaptureOverlayView.swift in Sources */,
+				A10000000000000000000050 /* SelectablePDFView.swift in Sources */,
+				A10000000000000000000051 /* PDFAnnotationEditing.swift in Sources */,
+				A10000000000000000000052 /* PDFDrawingTypes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

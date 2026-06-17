@@ -3,32 +3,6 @@ import PDFKit
 import SwiftData
 import SwiftUI
 
-enum PaperViewingMode: String, CaseIterable, Identifiable {
-    case questions = "Questions"
-    case solutions = "Solutions"
-    case both = "Both"
-
-    var id: String { rawValue }
-}
-
-private struct PDFPenColorChoice: Identifiable {
-    let name: String
-    let hex: String
-
-    var id: String { hex }
-}
-
-private let pdfPenColorChoices: [PDFPenColorChoice] = [
-    PDFPenColorChoice(name: "Black", hex: "#000000"),
-    PDFPenColorChoice(name: "Red", hex: "#D92D20"),
-    PDFPenColorChoice(name: "Blue", hex: "#2563EB"),
-    PDFPenColorChoice(name: "Green", hex: "#16A34A"),
-    PDFPenColorChoice(name: "Purple", hex: "#7C3AED"),
-    PDFPenColorChoice(name: "Orange", hex: "#EA580C"),
-    PDFPenColorChoice(name: "Yellow", hex: "#FACC15"),
-    PDFPenColorChoice(name: "Gray", hex: "#6B7280")
-]
-
 struct PaperViewerScreen: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appState: AppState
@@ -39,43 +13,43 @@ struct PaperViewerScreen: View {
     let subject: Subject?
     let school: School?
 
-    @State private var viewingMode: PaperViewingMode = .questions
-    @State private var isFlaggingQuestion = false
-    @State private var questionNumber = ""
-    @State private var category: QuestionCategory = .mistake
-    @State private var includeSolution = true
-    @State private var isSavingQuestion = false
+    @State var viewingMode: PaperViewingMode = .questions
+    @State var isFlaggingQuestion = false
+    @State var questionNumber = ""
+    @State var category: QuestionCategory = .mistake
+    @State var includeSolution = true
+    @State var isSavingQuestion = false
     @State private var captureError: String?
-    @State private var paperUpdateError: String?
+    @State var paperUpdateError: String?
     @State private var exportMessage: String?
     @State private var showExportResult = false
     @State private var exportedURL: URL?
     @State private var showDuplicateWarning = false
     @State private var showSolutionsStartPicker = false
     @State private var selectedSolutionsStartPage = 1
-    @State private var selectedDrawingTool: PDFDrawingTool = .none
-    @AppStorage("pdfViewer.pen1.colorHex") private var pen1ColorHex = "#000000"
-    @AppStorage("pdfViewer.pen1.lineWidth") private var pen1LineWidth = 4.0
-    @AppStorage("pdfViewer.pen2.colorHex") private var pen2ColorHex = "#D92D20"
-    @AppStorage("pdfViewer.pen2.lineWidth") private var pen2LineWidth = 4.0
-    @StateObject private var questionController = PDFViewerController()
-    @StateObject private var solutionController = PDFViewerController()
+    @State var selectedDrawingTool: PDFDrawingTool = .none
+    @AppStorage("pdfViewer.pen1.colorHex") var pen1ColorHex = "#000000"
+    @AppStorage("pdfViewer.pen1.lineWidth") var pen1LineWidth = 4.0
+    @AppStorage("pdfViewer.pen2.colorHex") var pen2ColorHex = "#D92D20"
+    @AppStorage("pdfViewer.pen2.lineWidth") var pen2LineWidth = 4.0
+    @StateObject var questionController = PDFViewerController()
+    @StateObject var solutionController = PDFViewerController()
     @StateObject private var questionAnnotationSession = PDFAnnotationSession()
     @StateObject private var solutionAnnotationSession = PDFAnnotationSession()
 
-    private var questionURL: URL? {
+    var questionURL: URL? {
         fileURL(for: paper.primaryPDFRelativePath)
     }
 
-    private var solutionURL: URL? {
+    var solutionURL: URL? {
         fileURL(for: paper.combinedPDFRelativePath ?? paper.solutionsPDFRelativePath)
     }
 
-    private var questionSelection: PDFPageSelection {
+    var questionSelection: PDFPageSelection {
         paper.solutionsStartPage.map { .questions(before: $0) } ?? .all
     }
 
-    private var solutionSelection: PDFPageSelection {
+    var solutionSelection: PDFPageSelection {
         paper.solutionsStartPage.map { .solutions(from: $0) } ?? .all
     }
 
@@ -84,7 +58,7 @@ struct PaperViewerScreen: View {
         return PDFDocument(url: questionURL)?.pageCount
     }
 
-    private var penConfigurations: [PDFPenConfiguration] {
+    var penConfigurations: [PDFPenConfiguration] {
         [
             PDFPenConfiguration(
                 colorHex: pen1ColorHex,
@@ -97,7 +71,7 @@ struct PaperViewerScreen: View {
         ]
     }
 
-    private var activeDrawingTool: PDFDrawingTool {
+    var activeDrawingTool: PDFDrawingTool {
         isFlaggingQuestion ? .none : selectedDrawingTool
     }
 
@@ -199,226 +173,7 @@ struct PaperViewerScreen: View {
         }
     }
 
-    private var viewerToolbar: some View {
-        HStack(spacing: 12) {
-            Button {
-                saveAnnotationsAndDismiss()
-            } label: {
-                Label("Back", systemImage: "chevron.left")
-            }
-            .keyboardShortcut(.cancelAction)
-            .help("Close this PDF and return to the paper list")
-
-            Divider()
-                .frame(height: 22)
-
-            Picker("Viewing mode", selection: $viewingMode) {
-                ForEach(PaperViewingMode.allCases) { mode in
-                    if paper.hasSolutions != false || mode == .questions {
-                        Text(mode.rawValue).tag(mode)
-                    }
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(maxWidth: 360)
-            .disabled(isFlaggingQuestion)
-
-            Divider()
-                .frame(height: 34)
-
-            penToolControls
-
-            Toggle("Completed", isOn: completionBinding)
-                .toggleStyle(.checkbox)
-
-            Button {
-                beginFlagging()
-            } label: {
-                Label("Flag Question", systemImage: "flag.badge.plus")
-            }
-            .disabled(
-                isFlaggingQuestion ||
-                subject == nil ||
-                school == nil ||
-                questionURL == nil
-            )
-            .help("Capture a question for revision")
-
-            Button {
-                performOnVisibleControllers { $0.fitWidth() }
-            } label: {
-                Label("Fit Width", systemImage: "arrow.left.and.right")
-            }
-            .labelStyle(.iconOnly)
-            .help("Fit pages to the viewer")
-
-            Menu {
-                Button {
-                    viewingMode = .questions
-                    presentSolutionsStartPicker()
-                } label: {
-                    Label("Set First Page of Solutions", systemImage: "doc.text.magnifyingglass")
-                }
-                .disabled(isFlaggingQuestion || questionURL == nil)
-
-                Button {
-                    revealPaper()
-                } label: {
-                    Label("Show in Finder", systemImage: "folder")
-                }
-
-                Button {
-                    exportPaper()
-                } label: {
-                    Label("Export PDF", systemImage: "square.and.arrow.up")
-                }
-                .disabled(questionURL == nil)
-            } label: {
-                Image(systemName: "ellipsis.circle")
-            }
-            .menuStyle(.borderlessButton)
-            .help("More actions")
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-    }
-
-    private var penToolControls: some View {
-        HStack(spacing: 10) {
-            penPresetControl(
-                index: 0,
-                colorHex: $pen1ColorHex,
-                lineWidth: $pen1LineWidth
-            )
-            penPresetControl(
-                index: 1,
-                colorHex: $pen2ColorHex,
-                lineWidth: $pen2LineWidth
-            )
-
-            Button {
-                selectedDrawingTool = selectedDrawingTool == .eraser ? .none : .eraser
-            } label: {
-                Image(systemName: "eraser")
-                    .frame(width: 26, height: 26)
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(
-                        selectedDrawingTool == .eraser
-                            ? Color.accentColor
-                            : Color.clear,
-                        lineWidth: 2
-                    )
-            )
-            .disabled(isFlaggingQuestion)
-            .help("Erase drawn strokes")
-
-            Spacer()
-        }
-    }
-
-    private func penPresetControl(
-        index: Int,
-        colorHex: Binding<String>,
-        lineWidth: Binding<Double>
-    ) -> some View {
-        VStack(spacing: 3) {
-            Button {
-                let tool: PDFDrawingTool = .pen(index)
-                selectedDrawingTool = selectedDrawingTool == tool ? .none : tool
-            } label: {
-                PenCircle(
-                    colorHex: colorHex.wrappedValue,
-                    lineWidth: clampedPenWidth(lineWidth.wrappedValue)
-                )
-                .frame(width: 28, height: 24)
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(
-                        selectedDrawingTool == .pen(index)
-                            ? Color.accentColor
-                            : Color.clear,
-                        lineWidth: 2
-                    )
-            )
-
-            penOptionsMenu(
-                colorHex: colorHex,
-                lineWidth: lineWidth
-            )
-        }
-        .frame(width: 38)
-        .disabled(isFlaggingQuestion)
-        .help(index == 0 ? "Pen preset 1" : "Pen preset 2")
-    }
-
-    private func penOptionsMenu(
-        colorHex: Binding<String>,
-        lineWidth: Binding<Double>
-    ) -> some View {
-        Menu {
-            Section("Color") {
-                ForEach(pdfPenColorChoices) { choice in
-                    Button {
-                        colorHex.wrappedValue = choice.hex
-                    } label: {
-                        HStack {
-                            Circle()
-                                .fill(Color(nsColor: NSColor(hexRGB: choice.hex) ?? .black))
-                                .frame(width: 9, height: 9)
-                            Text(choice.name)
-                            if colorHex.wrappedValue == choice.hex {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                }
-
-                ColorPicker(
-                    "More Colors",
-                    selection: colorBinding(for: colorHex),
-                    supportsOpacity: false
-                )
-            }
-
-            Section("Size") {
-                Picker("Size", selection: lineWidth) {
-                    ForEach(2...18, id: \.self) { size in
-                        Text("\(size) pt").tag(Double(size))
-                    }
-                }
-            }
-        } label: {
-            Image(systemName: "chevron.down.circle")
-                .font(.caption)
-        }
-        .menuStyle(.borderlessButton)
-        .controlSize(.small)
-        .frame(width: 26, height: 18)
-    }
-
-    private func colorBinding(for colorHex: Binding<String>) -> Binding<Color> {
-        Binding(
-            get: {
-                Color(nsColor: NSColor(hexRGB: colorHex.wrappedValue) ?? .black)
-            },
-            set: { color in
-                let nsColor = NSColor(color)
-                colorHex.wrappedValue = (
-                    nsColor.usingColorSpace(.deviceRGB) ?? nsColor
-                ).hexRGBString
-            }
-        )
-    }
-
-    private var completionBinding: Binding<Bool> {
+    var completionBinding: Binding<Bool> {
         Binding(
             get: { paper.isCompleted },
             set: { isCompleted in
@@ -435,7 +190,7 @@ struct PaperViewerScreen: View {
         )
     }
 
-    private func revealPaper() {
+    func revealPaper() {
         guard let rootURL = appState.rootFolderURL else {
             paperUpdateError = "The app storage folder is unavailable."
             return
@@ -450,162 +205,7 @@ struct PaperViewerScreen: View {
         }
     }
 
-    private var captureToolbar: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 12) {
-                Label("Select the question between the two lines", systemImage: "arrow.up.and.down")
-                    .font(.callout.weight(.medium))
-
-                Spacer()
-
-                TextField("Question number", text: $questionNumber)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 150)
-
-                Picker("Category", selection: $category) {
-                    ForEach(QuestionCategory.allCases, id: \.self) {
-                        Text($0.rawValue).tag($0)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 260)
-            }
-
-            HStack(spacing: 12) {
-                Toggle("Include solution capture", isOn: $includeSolution)
-                    .disabled(solutionURL == nil)
-                    .onChange(of: includeSolution) {
-                        if includeSolution {
-                            solutionController.beginCapture()
-                        } else {
-                            solutionController.endCapture()
-                        }
-                    }
-
-                Text("Scroll normally; drag either line to adjust the selected full-width area.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                if isSavingQuestion {
-                    ProgressView()
-                        .controlSize(.small)
-                }
-
-                Button("Cancel", role: .cancel) {
-                    finishFlagging()
-                }
-
-                Button("Save") {
-                    attemptSaveFlaggedQuestion()
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isSavingQuestion)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(.bar)
-    }
-
-    @ViewBuilder
-    private var viewerContent: some View {
-        switch viewingMode {
-        case .questions:
-            documentView(
-                url: questionURL,
-                selection: questionSelection,
-                controller: questionController,
-                label: "question paper"
-            )
-        case .solutions:
-            documentView(
-                url: solutionURL,
-                selection: solutionSelection,
-                controller: solutionController,
-                label: "solutions paper"
-            )
-        case .both:
-            HSplitView {
-                labeledDocumentView(
-                    title: "Questions",
-                    url: questionURL,
-                    selection: questionSelection,
-                    controller: questionController,
-                    label: "question paper"
-                )
-                labeledDocumentView(
-                    title: "Solutions",
-                    url: solutionURL,
-                    selection: solutionSelection,
-                    controller: solutionController,
-                    label: "solutions paper"
-                )
-            }
-        }
-    }
-
-    private func labeledDocumentView(
-        title: String,
-        url: URL?,
-        selection: PDFPageSelection,
-        controller: PDFViewerController,
-        label: String
-    ) -> some View {
-        VStack(spacing: 0) {
-            Text(title)
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(.bar)
-            documentView(
-                url: url,
-                selection: selection,
-                controller: controller,
-                label: label
-            )
-        }
-        .frame(minWidth: 320)
-    }
-
-    @ViewBuilder
-    private func documentView(
-        url: URL?,
-        selection: PDFPageSelection,
-        controller: PDFViewerController,
-        label: String
-    ) -> some View {
-        if let url {
-            let annotationSession = annotationSession(for: url)
-            PDFViewerView(
-                url: url,
-                sourceDocument: annotationSession?.document,
-                selection: selection,
-                drawingTool: activeDrawingTool,
-                penConfigurations: penConfigurations,
-                onAnnotationsChanged: {
-                    annotationSession?.markDirty()
-                },
-                onAnnotationError: { message in
-                    paperUpdateError = message
-                },
-                controller: controller
-            )
-        } else {
-            ContentUnavailableView(
-                "PDF Not Found",
-                systemImage: "doc.badge.exclamationmark",
-                description: Text(
-                    "The \(label) has been moved or deleted. Restore it in the app data folder."
-                )
-            )
-        }
-    }
-
-    private func presentSolutionsStartPicker() {
+    func presentSolutionsStartPicker() {
         guard let pageCount = paperPageCount else { return }
         selectedSolutionsStartPage = min(
             pageCount,
@@ -660,7 +260,7 @@ struct PaperViewerScreen: View {
         return url
     }
 
-    private func performOnVisibleControllers(
+    func performOnVisibleControllers(
         _ action: (PDFViewerController) -> Void
     ) {
         switch viewingMode {
@@ -683,7 +283,7 @@ struct PaperViewerScreen: View {
         }
     }
 
-    private func annotationSession(for url: URL) -> PDFAnnotationSession? {
+    func annotationSession(for url: URL) -> PDFAnnotationSession? {
         if url == questionURL {
             questionAnnotationSession
         } else if url == solutionURL {
@@ -700,7 +300,7 @@ struct PaperViewerScreen: View {
         }
     }
 
-    private func saveAnnotationsAndDismiss() {
+    func saveAnnotationsAndDismiss() {
         do {
             try savePendingAnnotations()
             dismiss()
@@ -709,11 +309,11 @@ struct PaperViewerScreen: View {
         }
     }
 
-    private func clampedPenWidth(_ width: Double) -> Double {
+    func clampedPenWidth(_ width: Double) -> Double {
         min(18, max(2, width.rounded()))
     }
 
-    private func beginFlagging() {
+    func beginFlagging() {
         do {
             try savePendingAnnotations()
         } catch {
@@ -738,7 +338,7 @@ struct PaperViewerScreen: View {
         }
     }
 
-    private func finishFlagging() {
+    func finishFlagging() {
         questionController.endCapture()
         solutionController.endCapture()
         isFlaggingQuestion = false
@@ -746,7 +346,7 @@ struct PaperViewerScreen: View {
         isSavingQuestion = false
     }
 
-    private func attemptSaveFlaggedQuestion() {
+    func attemptSaveFlaggedQuestion() {
         guard let subject, let school else {
             captureError = "The paper's subject or school is unavailable."
             return
@@ -839,7 +439,7 @@ struct PaperViewerScreen: View {
         }
     }
 
-    private func exportPaper() {
+    func exportPaper() {
         guard let rootURL = appState.rootFolderURL else {
             exportMessage = "The app storage folder is unavailable."
             showExportResult = true
@@ -867,158 +467,5 @@ struct PaperViewerScreen: View {
             exportMessage = error.localizedDescription
         }
         showExportResult = true
-    }
-}
-
-private struct PenCircle: View {
-    let colorHex: String
-    let lineWidth: Double
-
-    private var diameter: CGFloat {
-        CGFloat(min(24, max(8, lineWidth + 6)))
-    }
-
-    var body: some View {
-        Circle()
-            .fill(Color(nsColor: NSColor(hexRGB: colorHex) ?? .black))
-            .frame(width: diameter, height: diameter)
-            .overlay {
-                Circle()
-                    .stroke(Color.primary.opacity(0.18), lineWidth: 1)
-            }
-            .frame(width: 28, height: 24)
-    }
-}
-
-private struct SolutionsStartPagePickerSheet: View {
-    let url: URL
-    let pageCount: Int
-    @Binding var selectedPage: Int
-    @FocusState private var isKeyboardNavigationFocused: Bool
-    let allowsCancel: Bool
-    let cancel: () -> Void
-    let markNoSolutions: () -> Void
-    let confirm: () -> Void
-
-    private var canMoveBackward: Bool {
-        selectedPage > 1
-    }
-
-    private var canMoveForward: Bool {
-        selectedPage < pageCount
-    }
-
-    private var sliderValue: Binding<Double> {
-        Binding(
-            get: { Double(selectedPage) },
-            set: { selectedPage = clampedPage(Int($0.rounded())) }
-        )
-    }
-
-    private var pageTextValue: Binding<Int> {
-        Binding(
-            get: { selectedPage },
-            set: { selectedPage = clampedPage($0) }
-        )
-    }
-
-    private func previousPage() {
-        selectedPage = clampedPage(selectedPage - 1)
-    }
-
-    private func nextPage() {
-        selectedPage = clampedPage(selectedPage + 1)
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("Select the first page with solutions")
-                    .font(.title3.weight(.semibold))
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 18)
-            .padding(.bottom, 12)
-
-            Divider()
-
-            PDFPagePreviewView(url: url, pageNumber: selectedPage)
-                .frame(width: 540, height: 620)
-                .background(Color(nsColor: .windowBackgroundColor))
-
-            Divider()
-
-            VStack(spacing: 14) {
-                HStack(spacing: 12) {
-                    Button {
-                        previousPage()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                    }
-                    .disabled(!canMoveBackward)
-                    .help("Previous page")
-
-                    Text("Page")
-                        .foregroundStyle(.secondary)
-
-                    TextField("Page", value: pageTextValue, format: .number)
-                        .textFieldStyle(.roundedBorder)
-                        .multilineTextAlignment(.center)
-                        .frame(width: 72)
-
-                    Text("of \(pageCount)")
-                        .foregroundStyle(.secondary)
-
-                    Button {
-                        nextPage()
-                    } label: {
-                        Image(systemName: "chevron.right")
-                    }
-                    .disabled(!canMoveForward)
-                    .help("Next page")
-
-                    Slider(
-                        value: sliderValue,
-                        in: 1...Double(max(pageCount, 1))
-                    )
-                }
-
-                HStack {
-                    Button("This Paper Has No Solutions", action: markNoSolutions)
-
-                    Spacer()
-
-                    if allowsCancel {
-                        Button("Cancel", role: .cancel, action: cancel)
-                    }
-
-                    Button("This is the first solutions page", action: confirm)
-                        .buttonStyle(.borderedProminent)
-                        .disabled(selectedPage <= 1)
-                }
-            }
-            .padding(20)
-        }
-        .frame(width: 580)
-        .focusable()
-        .focused($isKeyboardNavigationFocused)
-        .onAppear {
-            isKeyboardNavigationFocused = true
-        }
-        .onMoveCommand { direction in
-            switch direction {
-            case .left, .up:
-                previousPage()
-            case .right, .down:
-                nextPage()
-            @unknown default:
-                break
-            }
-        }
-    }
-
-    private func clampedPage(_ page: Int) -> Int {
-        min(max(page, 1), max(pageCount, 1))
     }
 }
