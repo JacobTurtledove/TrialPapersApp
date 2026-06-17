@@ -61,6 +61,57 @@ struct FileWorkflowTests {
     }
 
     @Test
+    func storageMigrationEmbedsLegacyCrestsWithoutDeletingFiles() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let suiteName = "StorageMigrationServiceTests-\(UUID().uuidString)"
+        let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+        defer {
+            userDefaults.removePersistentDomain(forName: suiteName)
+        }
+
+        let legacyDirectory = rootURL.appending(
+            path: "School Crests",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: legacyDirectory,
+            withIntermediateDirectories: true
+        )
+        let crestURL = legacyDirectory.appending(path: "Example.png")
+        try makePNG(label: "Example", at: crestURL)
+
+        let school = School(
+            displayName: "Example School",
+            filenameValue: "ExampleSchool",
+            crestImageRelativePath: "School Crests/Example.png"
+        )
+        let service = StorageMigrationService(userDefaults: userDefaults)
+
+        let result = try service.migrateIfNeeded(rootURL: rootURL, schools: [school])
+
+        #expect(result.didChangeModels)
+        #expect(result.latestCompletedVersion == .legacySchoolCrestsEmbeddedData)
+        #expect(school.crestImageData != nil)
+        #expect(school.crestImageRelativePath == nil)
+        #expect(FileManager.default.fileExists(atPath: crestURL.path))
+        #expect(directoryExists(legacyDirectory))
+        #expect(userDefaults.integer(
+            forKey: StorageMigrationService.completedMigrationVersionKey
+        ) == 0)
+
+        service.markCompleted(upThrough: try #require(result.latestCompletedVersion))
+        #expect(userDefaults.integer(
+            forKey: StorageMigrationService.completedMigrationVersionKey
+        ) == StorageMigrationService.MigrationVersion.legacySchoolCrestsEmbeddedData.rawValue)
+
+        let secondResult = try service.migrateIfNeeded(rootURL: rootURL, schools: [school])
+        #expect(!secondResult.didChangeModels)
+        #expect(secondResult.latestCompletedVersion == nil)
+    }
+
+    @Test
     func preparesAndRenamesSubjectFolders() throws {
         let rootURL = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: rootURL) }

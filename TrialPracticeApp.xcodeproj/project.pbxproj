@@ -20,7 +20,6 @@
 		A1000000000000000000000C /* MainNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* MainNavigationView.swift */; };
 		A1000000000000000000000E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* RootView.swift */; };
 		A1000000000000000000000F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* SettingsView.swift */; };
-		A10000000000000000000010 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* SetupView.swift */; };
 		A10000000000000000000011 /* SubjectBinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* SubjectBinView.swift */; };
 		A10000000000000000000015 /* PDFViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* PDFViewerView.swift */; };
 		A10000000000000000000016 /* PaperViewerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000016 /* PaperViewerScreen.swift */; };
@@ -42,6 +41,7 @@
 		A10000000000000000000027 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000027 /* Assets.xcassets */; };
 		A10000000000000000000029 /* AppDirectories.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* AppDirectories.swift */; };
 		A1000000000000000000002A /* LibraryExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002A /* LibraryExportService.swift */; };
+		A1000000000000000000002B /* StorageMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002B /* StorageMigrationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,7 +58,6 @@
 		A2000000000000000000000C /* MainNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainNavigationView.swift; sourceTree = "<group>"; };
 		A2000000000000000000000E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		A2000000000000000000000F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		A20000000000000000000010 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		A20000000000000000000011 /* SubjectBinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectBinView.swift; sourceTree = "<group>"; };
 		A20000000000000000000013 /* TrialPracticeApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TrialPracticeApp.entitlements; sourceTree = "<group>"; };
 		A20000000000000000000014 /* HSC Trial Revision.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "HSC Trial Revision.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -82,6 +81,7 @@
 		A20000000000000000000027 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000029 /* AppDirectories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDirectories.swift; sourceTree = "<group>"; };
 		A2000000000000000000002A /* LibraryExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryExportService.swift; sourceTree = "<group>"; };
+		A2000000000000000000002B /* StorageMigrationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageMigrationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +109,7 @@
 			children = (
 				A20000000000000000000001 /* TrialPracticeApp.swift */,
 				A20000000000000000000027 /* Assets.xcassets */,
+				A40000000000000000000007 /* Infrastructure */,
 				A40000000000000000000003 /* Models */,
 				A40000000000000000000004 /* Services */,
 				A40000000000000000000005 /* Views */,
@@ -163,7 +164,6 @@
 				A2000000000000000000001B /* RevisionBookletsView.swift */,
 				A2000000000000000000000E /* RootView.swift */,
 				A2000000000000000000000F /* SettingsView.swift */,
-				A20000000000000000000010 /* SetupView.swift */,
 				A20000000000000000000011 /* SubjectBinView.swift */,
 				A20000000000000000000020 /* THSCImportView.swift */,
 			);
@@ -176,6 +176,22 @@
 				A20000000000000000000014 /* HSC Trial Revision.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000007 /* Infrastructure */ = {
+			isa = PBXGroup;
+			children = (
+				A40000000000000000000008 /* Storage */,
+			);
+			path = Infrastructure;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000008 /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000002B /* StorageMigrationService.swift */,
+			);
+			path = Storage;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -261,7 +277,6 @@
 				A1000000000000000000000C /* MainNavigationView.swift in Sources */,
 				A1000000000000000000000E /* RootView.swift in Sources */,
 				A1000000000000000000000F /* SettingsView.swift in Sources */,
-				A10000000000000000000010 /* SetupView.swift in Sources */,
 				A10000000000000000000011 /* SubjectBinView.swift in Sources */,
 				A10000000000000000000015 /* PDFViewerView.swift in Sources */,
 				A10000000000000000000016 /* PaperViewerScreen.swift in Sources */,
@@ -281,6 +296,7 @@
 				A10000000000000000000026 /* FinderRevealService.swift in Sources */,
 				A10000000000000000000029 /* AppDirectories.swift in Sources */,
 				A1000000000000000000002A /* LibraryExportService.swift in Sources */,
+				A1000000000000000000002B /* StorageMigrationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

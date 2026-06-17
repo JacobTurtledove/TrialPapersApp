@@ -5,54 +5,46 @@ import Testing
 struct AppStateTests {
     @Test
     @MainActor
-    func rejectsTheActualDesktopButNotAnotherFolderNamedDesktop() throws {
-        let fileManager = FileManager.default
-        let desktopURL = try #require(
-            fileManager.urls(for: .desktopDirectory, in: .userDomainMask).first
-        )
-        let unrelatedDesktop = FileManager.default.temporaryDirectory
-            .appending(path: "Desktop", directoryHint: .isDirectory)
-
-        #expect(AppState.isMacOSStandardFolder(desktopURL))
-        #expect(!AppState.isMacOSStandardFolder(unrelatedDesktop))
-    }
-
-    @Test
-    @MainActor
-    func rejectsSandboxContainerDataFolderShape() throws {
-        let rootURL = FileManager.default.temporaryDirectory
-            .appending(path: "Container-\(UUID().uuidString)", directoryHint: .isDirectory)
-        let dataURL = rootURL.appending(path: "Data", directoryHint: .isDirectory)
+    func configuresApplicationSupportFileStorageRoot() throws {
+        let rootURL = try temporaryDirectory()
         defer {
             try? FileManager.default.removeItem(at: rootURL)
         }
 
-        for entry in ["Desktop", "Documents", "Downloads", "Library", "SystemData", "tmp"] {
-            try FileManager.default.createDirectory(
-                at: dataURL.appending(path: entry, directoryHint: .isDirectory),
-                withIntermediateDirectories: true
-            )
-        }
+        let appState = AppState(fileStorageURLProvider: { rootURL })
 
-        #expect(AppState.looksLikeHomeOrSandboxContainerDataFolder(dataURL))
-        #expect(!AppState.isDedicatedStorageFolderCandidate(dataURL))
+        #expect(appState.rootFolderURL == rootURL)
+        #expect(appState.setupErrorMessage == nil)
+        #expect(directoryExists(rootURL.appending(path: "Papers", directoryHint: .isDirectory)))
+        #expect(directoryExists(
+            rootURL.appending(path: "Flagged Questions", directoryHint: .isDirectory)
+        ))
     }
 
     @Test
     @MainActor
-    func acceptsNormalDedicatedDataFolder() throws {
-        let dataURL = FileManager.default.temporaryDirectory
-            .appending(path: "HSC Papers Data-\(UUID().uuidString)", directoryHint: .isDirectory)
+    func developerResetRemovesFilesAndRestoresFolderStructure() throws {
+        let rootURL = try temporaryDirectory()
         defer {
-            try? FileManager.default.removeItem(at: dataURL)
+            try? FileManager.default.removeItem(at: rootURL)
         }
-        try FileManager.default.createDirectory(
-            at: dataURL,
-            withIntermediateDirectories: true
-        )
 
-        #expect(!AppState.looksLikeHomeOrSandboxContainerDataFolder(dataURL))
-        #expect(AppState.isDedicatedStorageFolderCandidate(dataURL))
+        let appState = AppState(fileStorageURLProvider: { rootURL })
+        let paperURL = rootURL.appending(path: "Papers/Example.pdf")
+        try Data("paper".utf8).write(to: paperURL)
+        let looseFileURL = rootURL.appending(path: "loose.txt")
+        try Data("loose".utf8).write(to: looseFileURL)
+
+        try appState.resetForDevelopment()
+
+        #expect(appState.rootFolderURL == rootURL)
+        #expect(appState.setupErrorMessage == nil)
+        #expect(!FileManager.default.fileExists(atPath: paperURL.path))
+        #expect(!FileManager.default.fileExists(atPath: looseFileURL.path))
+        #expect(directoryExists(rootURL.appending(path: "Papers", directoryHint: .isDirectory)))
+        #expect(directoryExists(
+            rootURL.appending(path: "Flagged Questions", directoryHint: .isDirectory)
+        ))
     }
 
     @Test
@@ -71,5 +63,18 @@ struct AppStateTests {
         #expect(appURL.lastPathComponent == "au.edu.moriah.hsc-trial-revision")
         #expect(FileManager.default.fileExists(atPath: appURL.path))
         #expect(appURL.deletingLastPathComponent() == baseURL)
+    }
+
+    private func temporaryDirectory() throws -> URL {
+        let url = FileManager.default.temporaryDirectory
+            .appending(path: "AppStateTests-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }
+
+    private func directoryExists(_ url: URL) -> Bool {
+        var isDirectory: ObjCBool = false
+        return FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) &&
+            isDirectory.boolValue
     }
 }

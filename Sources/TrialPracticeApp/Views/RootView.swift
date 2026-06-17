@@ -1,4 +1,3 @@
-import AppKit
 import SwiftData
 import SwiftUI
 
@@ -13,7 +12,7 @@ struct RootView: View {
         .frame(minWidth: 820, minHeight: 560)
         .background(WindowTitleSetter(title: AppBuild.windowTitle))
         .task(id: appState.rootFolderURL) {
-            migrateLegacyCrests()
+            runStorageMigrations()
         }
         .alert(
             "Storage Error",
@@ -28,37 +27,20 @@ struct RootView: View {
         }
     }
 
-    private func migrateLegacyCrests() {
+    private func runStorageMigrations() {
         guard let rootURL = appState.rootFolderURL else { return }
-        var migratedFiles: [URL] = []
-        var changed = false
+        let migrationService = StorageMigrationService()
 
         do {
-            for school in schools {
-                guard let path = school.crestImageRelativePath else { continue }
-                let fileURL = rootURL.appending(path: path).standardizedFileURL
-                if FileManager.default.fileExists(atPath: fileURL.path) {
-                    if school.crestImageData == nil, school.crestSourcePageURL == nil {
-                        school.crestImageData = try SchoolCrestService().pngData(
-                            from: Data(contentsOf: fileURL)
-                        )
-                    }
-                    migratedFiles.append(fileURL)
-                }
-                school.crestImageRelativePath = nil
-                changed = true
-            }
-            if changed {
-                try modelContext.save()
-                migratedFiles.forEach { try? FileManager.default.removeItem(at: $0) }
-            }
-
-            let legacyDirectory = rootURL.appending(
-                path: "School Crests",
-                directoryHint: .isDirectory
+            let result = try migrationService.migrateIfNeeded(
+                rootURL: rootURL,
+                schools: schools
             )
-            if FileManager.default.fileExists(atPath: legacyDirectory.path) {
-                try FileManager.default.removeItem(at: legacyDirectory)
+            if result.didChangeModels {
+                try modelContext.save()
+            }
+            if let latestCompletedVersion = result.latestCompletedVersion {
+                migrationService.markCompleted(upThrough: latestCompletedVersion)
             }
         } catch {
             modelContext.rollback()
