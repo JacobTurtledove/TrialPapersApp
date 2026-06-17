@@ -17,15 +17,10 @@ struct FinderRevealService {
     }
 
     static func storedURL(relativePath: String, rootURL: URL) throws -> URL {
-        let root = rootURL.standardizedFileURL.resolvingSymlinksInPath()
-        let candidate = root
-            .appending(path: relativePath)
-            .standardizedFileURL
-            .resolvingSymlinksInPath()
-        guard
-            candidate.path == root.path ||
-            candidate.path.hasPrefix(root.path + "/")
-        else {
+        let candidate: URL
+        do {
+            candidate = try StoredFilePath(relativePath).url(relativeTo: rootURL)
+        } catch {
             throw RevealError.itemOutsideRoot
         }
         guard FileManager.default.fileExists(atPath: candidate.path) else {

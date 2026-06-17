@@ -40,6 +40,93 @@ struct FileWorkflowTests {
     }
 
     @Test
+    func libraryExportCopiesNormalStoredRelativePath() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let relativePath = "Papers/Physics/ExampleSchool/paper.pdf"
+        let storedURL = rootURL.appending(path: relativePath)
+        try FileManager.default.createDirectory(
+            at: storedURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("paper".utf8).write(to: storedURL)
+
+        let exportFolderURL = rootURL.appending(path: "Exported", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: exportFolderURL, withIntermediateDirectories: true)
+        let destinationURL = exportFolderURL.appending(path: "paper.pdf")
+        let paper = Paper(
+            subjectID: UUID(),
+            schoolID: UUID(),
+            year: "2025",
+            questionPDFRelativePath: relativePath,
+            solutionsPDFRelativePath: relativePath
+        )
+
+        let exportedURL = try LibraryExportService(rootURL: rootURL).exportPaper(
+            paper,
+            to: destinationURL
+        )
+
+        #expect(exportedURL == destinationURL)
+        #expect(try Data(contentsOf: destinationURL) == Data("paper".utf8))
+    }
+
+    @Test
+    func libraryExportRejectsAbsoluteStoredPath() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let exportFolderURL = rootURL.appending(path: "Exported", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: exportFolderURL, withIntermediateDirectories: true)
+        let destinationURL = exportFolderURL.appending(path: "paper.pdf")
+        let paper = Paper(
+            subjectID: UUID(),
+            schoolID: UUID(),
+            year: "2025",
+            questionPDFRelativePath: "/tmp/outside.pdf",
+            solutionsPDFRelativePath: "/tmp/outside.pdf"
+        )
+
+        #expect(throws: StoredFilePath.ValidationError.absolute) {
+            try LibraryExportService(rootURL: rootURL).exportPaper(paper, to: destinationURL)
+        }
+        #expect(!FileManager.default.fileExists(atPath: destinationURL.path))
+    }
+
+    @Test
+    func folderExportRejectsTraversalWithoutCreatingEscapedDestinationFolder() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let subjectID = UUID()
+        let schoolID = UUID()
+        let subject = Subject(
+            id: subjectID,
+            displayName: "Physics",
+            filenameValue: "Physics"
+        )
+        let paper = Paper(
+            subjectID: subjectID,
+            schoolID: schoolID,
+            year: "2025",
+            questionPDFRelativePath: "../Escaped/paper.pdf",
+            solutionsPDFRelativePath: "../Escaped/paper.pdf"
+        )
+        let exportParentURL = rootURL.appending(path: "Exports", directoryHint: .isDirectory)
+
+        #expect(throws: StoredFilePath.ValidationError.parentDirectoryComponent) {
+            try LibraryExportService(rootURL: rootURL).exportLibrary(
+                subjects: [subject],
+                papers: [paper],
+                flaggedQuestions: [],
+                to: exportParentURL
+            )
+        }
+        #expect(!directoryExists(exportParentURL.appending(path: "Escaped")))
+    }
+
+    @Test
     func preparesExpectedFolderStructure() throws {
         let rootURL = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: rootURL) }

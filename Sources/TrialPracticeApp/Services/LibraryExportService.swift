@@ -138,19 +138,24 @@ struct LibraryExportService {
     private func export(relativePaths: [String], to destinationURL: URL) throws {
         guard !relativePaths.isEmpty else { throw ExportError.noFiles }
         for relativePath in relativePaths {
-            let destination = destinationURL.appending(path: relativePath)
+            let storedPath = try StoredFilePath(relativePath)
+            let destination = destinationURL.appending(path: storedPath.rawValue)
             try FileManager.default.createDirectory(
                 at: destination.deletingLastPathComponent(),
                 withIntermediateDirectories: true
             )
-            try copyStoredFile(relativePath: relativePath, to: destination)
+            try copyStoredFile(storedPath: storedPath, to: destination)
         }
     }
 
     private func copyStoredFile(relativePath: String, to destinationURL: URL) throws {
-        let sourceURL = try containedURL(for: relativePath)
+        try copyStoredFile(storedPath: StoredFilePath(relativePath), to: destinationURL)
+    }
+
+    private func copyStoredFile(storedPath: StoredFilePath, to destinationURL: URL) throws {
+        let sourceURL = try containedURL(for: storedPath)
         guard FileManager.default.fileExists(atPath: sourceURL.path) else {
-            throw ExportError.missingSource(relativePath)
+            throw ExportError.missingSource(storedPath.rawValue)
         }
         if FileManager.default.fileExists(atPath: destinationURL.path) {
             try FileManager.default.removeItem(at: destinationURL)
@@ -158,16 +163,8 @@ struct LibraryExportService {
         try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
     }
 
-    private func containedURL(for relativePath: String) throws -> URL {
-        let root = rootURL.standardizedFileURL.resolvingSymlinksInPath()
-        let candidate = root
-            .appending(path: relativePath)
-            .standardizedFileURL
-            .resolvingSymlinksInPath()
-        guard candidate.path == root.path || candidate.path.hasPrefix(root.path + "/") else {
-            throw CocoaError(.fileReadNoPermission)
-        }
-        return candidate
+    private func containedURL(for storedPath: StoredFilePath) throws -> URL {
+        try storedPath.url(relativeTo: rootURL)
     }
 
     private func uniqueDirectory(named name: String, in parentURL: URL) throws -> URL {
