@@ -53,6 +53,7 @@
 		A10000000000000000000034 /* FlaggedQuestionSaveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* FlaggedQuestionSaveService.swift */; };
 		A10000000000000000000035 /* THSCSourcePresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* THSCSourcePresets.swift */; };
 		A10000000000000000000036 /* NESAPastPaperCatalogue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* NESAPastPaperCatalogue.swift */; };
+		A10000000000000000000037 /* StoredFilePath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000037 /* StoredFilePath.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -104,6 +105,7 @@
 		A20000000000000000000034 /* FlaggedQuestionSaveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedQuestionSaveService.swift; sourceTree = "<group>"; };
 		A20000000000000000000035 /* THSCSourcePresets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = THSCSourcePresets.swift; sourceTree = "<group>"; };
 		A20000000000000000000036 /* NESAPastPaperCatalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NESAPastPaperCatalogue.swift; sourceTree = "<group>"; };
+		A20000000000000000000037 /* StoredFilePath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredFilePath.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -225,6 +227,7 @@
 			isa = PBXGroup;
 			children = (
 				A2000000000000000000002B /* StorageMigrationService.swift */,
+				A20000000000000000000037 /* StoredFilePath.swift */,
 			);
 			path = Storage;
 			sourceTree = "<group>";
@@ -389,6 +392,7 @@
 				A10000000000000000000034 /* FlaggedQuestionSaveService.swift in Sources */,
 				A10000000000000000000035 /* THSCSourcePresets.swift in Sources */,
 				A10000000000000000000036 /* NESAPastPaperCatalogue.swift in Sources */,
+				A10000000000000000000037 /* StoredFilePath.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
