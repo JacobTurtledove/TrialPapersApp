@@ -42,6 +42,8 @@
 		A10000000000000000000029 /* AppDirectories.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* AppDirectories.swift */; };
 		A1000000000000000000002A /* LibraryExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002A /* LibraryExportService.swift */; };
 		A1000000000000000000002B /* StorageMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002B /* StorageMigrationService.swift */; };
+		A1000000000000000000002C /* PaperValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002C /* PaperValidation.swift */; };
+		A1000000000000000000002D /* PaperFileNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002D /* PaperFileNames.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -82,6 +84,8 @@
 		A20000000000000000000029 /* AppDirectories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDirectories.swift; sourceTree = "<group>"; };
 		A2000000000000000000002A /* LibraryExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryExportService.swift; sourceTree = "<group>"; };
 		A2000000000000000000002B /* StorageMigrationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageMigrationService.swift; sourceTree = "<group>"; };
+		A2000000000000000000002C /* PaperValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperValidation.swift; sourceTree = "<group>"; };
+		A2000000000000000000002D /* PaperFileNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperFileNames.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +113,7 @@
 			children = (
 				A20000000000000000000001 /* TrialPracticeApp.swift */,
 				A20000000000000000000027 /* Assets.xcassets */,
+				A40000000000000000000009 /* Features */,
 				A40000000000000000000007 /* Infrastructure */,
 				A40000000000000000000003 /* Models */,
 				A40000000000000000000004 /* Services */,
@@ -192,6 +197,23 @@
 				A2000000000000000000002B /* StorageMigrationService.swift */,
 			);
 			path = Storage;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000009 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				A4000000000000000000000A /* PaperImport */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		A4000000000000000000000A /* PaperImport */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000002D /* PaperFileNames.swift */,
+				A2000000000000000000002C /* PaperValidation.swift */,
+			);
+			path = PaperImport;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -297,6 +319,8 @@
 				A10000000000000000000029 /* AppDirectories.swift in Sources */,
 				A1000000000000000000002A /* LibraryExportService.swift in Sources */,
 				A1000000000000000000002B /* StorageMigrationService.swift in Sources */,
+				A1000000000000000000002C /* PaperValidation.swift in Sources */,
+				A1000000000000000000002D /* PaperFileNames.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

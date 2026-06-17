@@ -22,41 +22,6 @@ struct ImportedPaperFiles {
     let combinedRelativePath: String
 }
 
-enum PaperValidation {
-    static func year(from input: String) -> String? {
-        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed.allSatisfy(\.isNumber) else {
-            return nil
-        }
-        return trimmed
-    }
-
-    static func mark(from input: String) -> Double? {
-        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-        return Double(trimmed)
-    }
-}
-
-enum PaperFileNames {
-    static func base(subject: Subject, school: School, year: String) -> String {
-        "\(subject.filenameValue)_\(school.filenameValue)_\(year)"
-    }
-
-    static func question(subject: Subject, school: School, year: String) -> String {
-        "\(base(subject: subject, school: school, year: year)).pdf"
-    }
-
-    static func combined(subject: Subject, school: School, year: String) -> String {
-        question(subject: subject, school: school, year: year)
-    }
-
-    static func solutions(subject: Subject, school: School, year: String) -> String {
-        "\(base(subject: subject, school: school, year: year))_sols.pdf"
-    }
-
-}
-
 struct PaperImportService {
     enum ImportError: LocalizedError {
         case unreadablePDF(String)
