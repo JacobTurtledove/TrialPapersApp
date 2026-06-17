@@ -1623,19 +1623,82 @@ Notes:
 - No SwiftData model, storage, export, or migration behavior changed.
 
 ### Step H1 — Move PDFPickerTarget
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/PaperImport/PDFPickerTarget.swift
+- Sources/TrialPracticeApp/Views/AddPaperView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved PDFPickerTarget into the PaperImport feature folder.
+- Preserved the question and solutions picker target cases.
+- No SwiftData model, import, storage, migration, or deletion behavior changed.
 
 ### Step H2 — Move PDFSelectionRow
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/PaperImport/PDFSelectionRow.swift
+- Sources/TrialPracticeApp/Views/AddPaperView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved the PDF selection row UI into the PaperImport feature folder.
+- Preserved the selected filename fallback text, choose/replace labels, line limit, and button action.
+- No SwiftData model, import, storage, migration, or deletion behavior changed.
 
 ### Step H3 — Move security scoped helper
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/PaperImport/SecurityScopedURLAccess.swift
+- Sources/TrialPracticeApp/Views/AddPaperView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved the single-URL withSecurityScopedAccess helper into the PaperImport feature folder.
+- Preserved the startAccessingSecurityScopedResource/defer/stop behavior exactly.
+- Left the multi-URL import scoped-access block in AddPaperView unchanged.
+- No SwiftData model, import, storage, migration, or deletion behavior changed.
 
 ### Step I1 — Fix leading import whitespace
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Views/SubjectBinView.swift
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: no
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Removed the leading whitespace before import SwiftData.
+- No behavior, SwiftData model, storage, migration, import/export, PDF, capture, or deletion behavior changed.
 
 ### Step I2 — Move THSCImportProgressBar
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/THSCImport/THSCImportProgressBar.swift
+- Sources/TrialPracticeApp/Views/MainNavigationView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved THSCImportProgressBar into the THSCImport feature folder.
+- Preserved the import-in-progress condition, progress values, text, sizing, bar background, and divider.
+- No SwiftData model, import, storage, migration, export, PDF, capture, or deletion behavior changed.
 
 ---
 

@@ -337,33 +337,3 @@ struct AddPaperView: View {
         }
     }
 }
-
-private struct PDFSelectionRow: View {
-    let title: String
-    let url: URL?
-    let choose: () -> Void
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                Text(url?.lastPathComponent ?? "No file selected")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer()
-            Button(url == nil ? "Choose…" : "Replace…", action: choose)
-        }
-    }
-}
-
-private func withSecurityScopedAccess<T>(to url: URL, perform: () -> T) -> T {
-    let didStart = url.startAccessingSecurityScopedResource()
-    defer {
-        if didStart {
-            url.stopAccessingSecurityScopedResource()
-        }
-    }
-    return perform()
-}

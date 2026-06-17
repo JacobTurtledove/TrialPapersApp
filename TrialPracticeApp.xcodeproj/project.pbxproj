@@ -92,6 +92,9 @@
 		A1000000000000000000005C /* RevisionBookletControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005C /* RevisionBookletControls.swift */; };
 		A1000000000000000000005D /* RevisionBookletQuestionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005D /* RevisionBookletQuestionRow.swift */; };
 		A1000000000000000000005E /* PDFPickerTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005E /* PDFPickerTarget.swift */; };
+		A1000000000000000000005F /* PDFSelectionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005F /* PDFSelectionRow.swift */; };
+		A10000000000000000000060 /* SecurityScopedURLAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000060 /* SecurityScopedURLAccess.swift */; };
+		A10000000000000000000061 /* THSCImportProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000061 /* THSCImportProgressBar.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -182,6 +185,9 @@
 		A2000000000000000000005C /* RevisionBookletControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevisionBookletControls.swift; sourceTree = "<group>"; };
 		A2000000000000000000005D /* RevisionBookletQuestionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevisionBookletQuestionRow.swift; sourceTree = "<group>"; };
 		A2000000000000000000005E /* PDFPickerTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPickerTarget.swift; sourceTree = "<group>"; };
+		A2000000000000000000005F /* PDFSelectionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFSelectionRow.swift; sourceTree = "<group>"; };
+		A20000000000000000000060 /* SecurityScopedURLAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityScopedURLAccess.swift; sourceTree = "<group>"; };
+		A20000000000000000000061 /* THSCImportProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = THSCImportProgressBar.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -352,6 +358,7 @@
 				A20000000000000000000058 /* THSCImportControls.swift */,
 				A20000000000000000000059 /* THSCPaperListView.swift */,
 				A2000000000000000000005A /* THSCImportBar.swift */,
+				A20000000000000000000061 /* THSCImportProgressBar.swift */,
 			);
 			path = THSCImport;
 			sourceTree = "<group>";
@@ -412,6 +419,8 @@
 			isa = PBXGroup;
 			children = (
 				A2000000000000000000005E /* PDFPickerTarget.swift */,
+				A2000000000000000000005F /* PDFSelectionRow.swift */,
+				A20000000000000000000060 /* SecurityScopedURLAccess.swift */,
 				A2000000000000000000002D /* PaperFileNames.swift */,
 				A2000000000000000000002C /* PaperValidation.swift */,
 			);
@@ -593,6 +602,9 @@
 				A1000000000000000000005C /* RevisionBookletControls.swift in Sources */,
 				A1000000000000000000005D /* RevisionBookletQuestionRow.swift in Sources */,
 				A1000000000000000000005E /* PDFPickerTarget.swift in Sources */,
+				A1000000000000000000005F /* PDFSelectionRow.swift in Sources */,
+				A10000000000000000000060 /* SecurityScopedURLAccess.swift in Sources */,
+				A10000000000000000000061 /* THSCImportProgressBar.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

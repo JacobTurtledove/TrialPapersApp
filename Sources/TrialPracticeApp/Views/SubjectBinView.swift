@@ -1,4 +1,4 @@
- import SwiftData
+import SwiftData
 import SwiftUI
 
 struct SubjectBinView: View {
