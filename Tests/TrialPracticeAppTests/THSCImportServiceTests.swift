@@ -5,6 +5,7 @@ import Testing
 struct THSCImportServiceTests {
     @Test
     func exposesExpandedUniqueTrialCollections() {
+        #expect(!THSCSource.presets.isEmpty)
         #expect(THSCSource.presets.count == 26)
         #expect(Set(THSCSource.presets.map(\.id)).count == 26)
         #expect(THSCSource.presets.contains { $0.name == "Business Studies Trials" })

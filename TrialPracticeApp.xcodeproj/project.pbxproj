@@ -51,6 +51,7 @@
 		A10000000000000000000032 /* LibraryMutationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* LibraryMutationService.swift */; };
 		A10000000000000000000033 /* PDFDrawingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* PDFDrawingSupport.swift */; };
 		A10000000000000000000034 /* FlaggedQuestionSaveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* FlaggedQuestionSaveService.swift */; };
+		A10000000000000000000035 /* THSCSourcePresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* THSCSourcePresets.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -100,6 +101,7 @@
 		A20000000000000000000032 /* LibraryMutationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryMutationService.swift; sourceTree = "<group>"; };
 		A20000000000000000000033 /* PDFDrawingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFDrawingSupport.swift; sourceTree = "<group>"; };
 		A20000000000000000000034 /* FlaggedQuestionSaveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedQuestionSaveService.swift; sourceTree = "<group>"; };
+		A20000000000000000000035 /* THSCSourcePresets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = THSCSourcePresets.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -164,6 +166,7 @@
 				A2000000000000000000001A /* RevisionBookletService.swift */,
 				A2000000000000000000001D /* SubjectPaperCSVService.swift */,
 				A2000000000000000000001F /* THSCImportService.swift */,
+				A20000000000000000000035 /* THSCSourcePresets.swift */,
 				A20000000000000000000021 /* THSCImportCoordinator.swift */,
 				A20000000000000000000023 /* SchoolCrestService.swift */,
 				A20000000000000000000024 /* SchoolCrestLookupService.swift */,
@@ -373,6 +376,7 @@
 				A10000000000000000000032 /* LibraryMutationService.swift in Sources */,
 				A10000000000000000000033 /* PDFDrawingSupport.swift in Sources */,
 				A10000000000000000000034 /* FlaggedQuestionSaveService.swift in Sources */,
+				A10000000000000000000035 /* THSCSourcePresets.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
