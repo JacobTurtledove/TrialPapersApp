@@ -49,6 +49,7 @@
 		A10000000000000000000030 /* SchoolFolderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* SchoolFolderCard.swift */; };
 		A10000000000000000000031 /* SubjectEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* SubjectEditor.swift */; };
 		A10000000000000000000032 /* LibraryMutationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* LibraryMutationService.swift */; };
+		A10000000000000000000033 /* PDFDrawingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* PDFDrawingSupport.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -96,6 +97,7 @@
 		A20000000000000000000030 /* SchoolFolderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolFolderCard.swift; sourceTree = "<group>"; };
 		A20000000000000000000031 /* SubjectEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectEditor.swift; sourceTree = "<group>"; };
 		A20000000000000000000032 /* LibraryMutationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryMutationService.swift; sourceTree = "<group>"; };
+		A20000000000000000000033 /* PDFDrawingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFDrawingSupport.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -197,9 +199,18 @@
 		A40000000000000000000007 /* Infrastructure */ = {
 			isa = PBXGroup;
 			children = (
+				A4000000000000000000000D /* PDF */,
 				A40000000000000000000008 /* Storage */,
 			);
 			path = Infrastructure;
+			sourceTree = "<group>";
+		};
+		A4000000000000000000000D /* PDF */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000033 /* PDFDrawingSupport.swift */,
+			);
+			path = PDF;
 			sourceTree = "<group>";
 		};
 		A40000000000000000000008 /* Storage */ = {
@@ -357,6 +368,7 @@
 				A10000000000000000000030 /* SchoolFolderCard.swift in Sources */,
 				A10000000000000000000031 /* SubjectEditor.swift in Sources */,
 				A10000000000000000000032 /* LibraryMutationService.swift in Sources */,
+				A10000000000000000000033 /* PDFDrawingSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
