@@ -11,6 +11,24 @@ enum PaperViewingMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+private struct PDFPenColorChoice: Identifiable {
+    let name: String
+    let hex: String
+
+    var id: String { hex }
+}
+
+private let pdfPenColorChoices: [PDFPenColorChoice] = [
+    PDFPenColorChoice(name: "Black", hex: "#000000"),
+    PDFPenColorChoice(name: "Red", hex: "#D92D20"),
+    PDFPenColorChoice(name: "Blue", hex: "#2563EB"),
+    PDFPenColorChoice(name: "Green", hex: "#16A34A"),
+    PDFPenColorChoice(name: "Purple", hex: "#7C3AED"),
+    PDFPenColorChoice(name: "Orange", hex: "#EA580C"),
+    PDFPenColorChoice(name: "Yellow", hex: "#FACC15"),
+    PDFPenColorChoice(name: "Gray", hex: "#6B7280")
+]
+
 struct PaperViewerScreen: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appState: AppState
@@ -35,8 +53,15 @@ struct PaperViewerScreen: View {
     @State private var showDuplicateWarning = false
     @State private var showSolutionsStartPicker = false
     @State private var selectedSolutionsStartPage = 1
+    @State private var selectedDrawingTool: PDFDrawingTool = .none
+    @AppStorage("pdfViewer.pen1.colorHex") private var pen1ColorHex = "#000000"
+    @AppStorage("pdfViewer.pen1.lineWidth") private var pen1LineWidth = 4.0
+    @AppStorage("pdfViewer.pen2.colorHex") private var pen2ColorHex = "#D92D20"
+    @AppStorage("pdfViewer.pen2.lineWidth") private var pen2LineWidth = 4.0
     @StateObject private var questionController = PDFViewerController()
     @StateObject private var solutionController = PDFViewerController()
+    @StateObject private var questionAnnotationSession = PDFAnnotationSession()
+    @StateObject private var solutionAnnotationSession = PDFAnnotationSession()
 
     private var questionURL: URL? {
         fileURL(for: paper.combinedPDFRelativePath ?? paper.questionPDFRelativePath)
@@ -59,6 +84,23 @@ struct PaperViewerScreen: View {
         return PDFDocument(url: questionURL)?.pageCount
     }
 
+    private var penConfigurations: [PDFPenConfiguration] {
+        [
+            PDFPenConfiguration(
+                colorHex: pen1ColorHex,
+                lineWidth: clampedPenWidth(pen1LineWidth)
+            ),
+            PDFPenConfiguration(
+                colorHex: pen2ColorHex,
+                lineWidth: clampedPenWidth(pen2LineWidth)
+            )
+        ]
+    }
+
+    private var activeDrawingTool: PDFDrawingTool {
+        isFlaggingQuestion ? .none : selectedDrawingTool
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             viewerToolbar
@@ -71,6 +113,7 @@ struct PaperViewerScreen: View {
         }
         .navigationTitle(viewerTitle)
         .onAppear {
+            loadAnnotationSessions()
             if paper.hasSolutions != false, paper.solutionsStartPage == nil {
                 viewingMode = .questions
                 presentSolutionsStartPicker()
@@ -78,6 +121,19 @@ struct PaperViewerScreen: View {
                 viewingMode = .both
             } else {
                 viewingMode = .questions
+            }
+        }
+        .onChange(of: questionURL) {
+            loadAnnotationSessions()
+        }
+        .onChange(of: solutionURL) {
+            loadAnnotationSessions()
+        }
+        .onDisappear {
+            do {
+                try savePendingAnnotations()
+            } catch {
+                paperUpdateError = error.localizedDescription
             }
         }
         .sheet(isPresented: $showSolutionsStartPicker) {
@@ -146,7 +202,7 @@ struct PaperViewerScreen: View {
     private var viewerToolbar: some View {
         HStack(spacing: 12) {
             Button {
-                dismiss()
+                saveAnnotationsAndDismiss()
             } label: {
                 Label("Back", systemImage: "chevron.left")
             }
@@ -168,29 +224,13 @@ struct PaperViewerScreen: View {
             .frame(maxWidth: 360)
             .disabled(isFlaggingQuestion)
 
-            Button("Change Solutions Start") {
-                viewingMode = .questions
-                presentSolutionsStartPicker()
-            }
-            .disabled(isFlaggingQuestion || questionURL == nil)
+            Divider()
+                .frame(height: 34)
 
-            Spacer()
+            penToolControls
 
             Toggle("Completed", isOn: completionBinding)
                 .toggleStyle(.checkbox)
-
-            Button {
-                revealPaper()
-            } label: {
-                Label("Show in Finder", systemImage: "folder")
-            }
-
-            Button {
-                exportPaper()
-            } label: {
-                Label("Export PDF", systemImage: "square.and.arrow.up")
-            }
-            .disabled(questionURL == nil)
 
             Button {
                 beginFlagging()
@@ -206,14 +246,6 @@ struct PaperViewerScreen: View {
             .help("Capture a question for revision")
 
             Button {
-                performOnVisibleControllers { $0.zoomOut() }
-            } label: {
-                Label("Zoom Out", systemImage: "minus.magnifyingglass")
-            }
-            .labelStyle(.iconOnly)
-            .help("Zoom out")
-
-            Button {
                 performOnVisibleControllers { $0.fitWidth() }
             } label: {
                 Label("Fit Width", systemImage: "arrow.left.and.right")
@@ -221,16 +253,169 @@ struct PaperViewerScreen: View {
             .labelStyle(.iconOnly)
             .help("Fit pages to the viewer")
 
-            Button {
-                performOnVisibleControllers { $0.zoomIn() }
+            Menu {
+                Button {
+                    viewingMode = .questions
+                    presentSolutionsStartPicker()
+                } label: {
+                    Label("Set First Page of Solutions", systemImage: "doc.text.magnifyingglass")
+                }
+                .disabled(isFlaggingQuestion || questionURL == nil)
+
+                Button {
+                    revealPaper()
+                } label: {
+                    Label("Show in Finder", systemImage: "folder")
+                }
+
+                Button {
+                    exportPaper()
+                } label: {
+                    Label("Export PDF", systemImage: "square.and.arrow.up")
+                }
+                .disabled(questionURL == nil)
             } label: {
-                Label("Zoom In", systemImage: "plus.magnifyingglass")
+                Image(systemName: "ellipsis.circle")
             }
-            .labelStyle(.iconOnly)
-            .help("Zoom in")
+            .menuStyle(.borderlessButton)
+            .help("More actions")
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(.vertical, 8)
+    }
+
+    private var penToolControls: some View {
+        HStack(spacing: 10) {
+            penPresetControl(
+                index: 0,
+                colorHex: $pen1ColorHex,
+                lineWidth: $pen1LineWidth
+            )
+            penPresetControl(
+                index: 1,
+                colorHex: $pen2ColorHex,
+                lineWidth: $pen2LineWidth
+            )
+
+            Button {
+                selectedDrawingTool = selectedDrawingTool == .eraser ? .none : .eraser
+            } label: {
+                Image(systemName: "eraser")
+                    .frame(width: 26, height: 26)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(
+                        selectedDrawingTool == .eraser
+                            ? Color.accentColor
+                            : Color.clear,
+                        lineWidth: 2
+                    )
+            )
+            .disabled(isFlaggingQuestion)
+            .help("Erase drawn strokes")
+
+            Spacer()
+        }
+    }
+
+    private func penPresetControl(
+        index: Int,
+        colorHex: Binding<String>,
+        lineWidth: Binding<Double>
+    ) -> some View {
+        VStack(spacing: 3) {
+            Button {
+                let tool: PDFDrawingTool = .pen(index)
+                selectedDrawingTool = selectedDrawingTool == tool ? .none : tool
+            } label: {
+                PenCircle(
+                    colorHex: colorHex.wrappedValue,
+                    lineWidth: clampedPenWidth(lineWidth.wrappedValue)
+                )
+                .frame(width: 28, height: 24)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(
+                        selectedDrawingTool == .pen(index)
+                            ? Color.accentColor
+                            : Color.clear,
+                        lineWidth: 2
+                    )
+            )
+
+            penOptionsMenu(
+                colorHex: colorHex,
+                lineWidth: lineWidth
+            )
+        }
+        .frame(width: 38)
+        .disabled(isFlaggingQuestion)
+        .help(index == 0 ? "Pen preset 1" : "Pen preset 2")
+    }
+
+    private func penOptionsMenu(
+        colorHex: Binding<String>,
+        lineWidth: Binding<Double>
+    ) -> some View {
+        Menu {
+            Section("Color") {
+                ForEach(pdfPenColorChoices) { choice in
+                    Button {
+                        colorHex.wrappedValue = choice.hex
+                    } label: {
+                        HStack {
+                            Circle()
+                                .fill(Color(nsColor: NSColor(hexRGB: choice.hex) ?? .black))
+                                .frame(width: 9, height: 9)
+                            Text(choice.name)
+                            if colorHex.wrappedValue == choice.hex {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+
+                ColorPicker(
+                    "More Colors",
+                    selection: colorBinding(for: colorHex),
+                    supportsOpacity: false
+                )
+            }
+
+            Section("Size") {
+                Picker("Size", selection: lineWidth) {
+                    ForEach(2...18, id: \.self) { size in
+                        Text("\(size) pt").tag(Double(size))
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "chevron.down.circle")
+                .font(.caption)
+        }
+        .menuStyle(.borderlessButton)
+        .controlSize(.small)
+        .frame(width: 26, height: 18)
+    }
+
+    private func colorBinding(for colorHex: Binding<String>) -> Binding<Color> {
+        Binding(
+            get: {
+                Color(nsColor: NSColor(hexRGB: colorHex.wrappedValue) ?? .black)
+            },
+            set: { color in
+                let nsColor = NSColor(color)
+                colorHex.wrappedValue = (
+                    nsColor.usingColorSpace(.deviceRGB) ?? nsColor
+                ).hexRGBString
+            }
+        )
     }
 
     private var completionBinding: Binding<Bool> {
@@ -395,9 +580,19 @@ struct PaperViewerScreen: View {
         label: String
     ) -> some View {
         if let url {
+            let annotationSession = annotationSession(for: url)
             PDFViewerView(
                 url: url,
+                sourceDocument: annotationSession?.document,
                 selection: selection,
+                drawingTool: activeDrawingTool,
+                penConfigurations: penConfigurations,
+                onAnnotationsChanged: {
+                    annotationSession?.markDirty()
+                },
+                onAnnotationError: { message in
+                    paperUpdateError = message
+                },
                 controller: controller
             )
         } else {
@@ -480,7 +675,53 @@ struct PaperViewerScreen: View {
         }
     }
 
+    private func loadAnnotationSessions() {
+        questionAnnotationSession.load(url: questionURL)
+        if solutionURL == questionURL {
+            solutionAnnotationSession.load(url: nil)
+        } else {
+            solutionAnnotationSession.load(url: solutionURL)
+        }
+    }
+
+    private func annotationSession(for url: URL) -> PDFAnnotationSession? {
+        if url == questionURL {
+            questionAnnotationSession
+        } else if url == solutionURL {
+            solutionURL == questionURL ? questionAnnotationSession : solutionAnnotationSession
+        } else {
+            nil
+        }
+    }
+
+    private func savePendingAnnotations() throws {
+        try questionAnnotationSession.saveIfNeeded()
+        if solutionURL != questionURL {
+            try solutionAnnotationSession.saveIfNeeded()
+        }
+    }
+
+    private func saveAnnotationsAndDismiss() {
+        do {
+            try savePendingAnnotations()
+            dismiss()
+        } catch {
+            paperUpdateError = error.localizedDescription
+        }
+    }
+
+    private func clampedPenWidth(_ width: Double) -> Double {
+        min(18, max(2, width.rounded()))
+    }
+
     private func beginFlagging() {
+        do {
+            try savePendingAnnotations()
+        } catch {
+            captureError = error.localizedDescription
+            return
+        }
+
         questionNumber = ""
         category = .mistake
         includeSolution = paper.hasSolutions != false && paper.solutionsStartPage != nil
@@ -636,6 +877,7 @@ struct PaperViewerScreen: View {
         }
 
         do {
+            try savePendingAnnotations()
             exportedURL = try LibraryExportService(rootURL: rootURL).exportPaper(
                 paper,
                 to: destinationURL
@@ -646,6 +888,26 @@ struct PaperViewerScreen: View {
             exportMessage = error.localizedDescription
         }
         showExportResult = true
+    }
+}
+
+private struct PenCircle: View {
+    let colorHex: String
+    let lineWidth: Double
+
+    private var diameter: CGFloat {
+        CGFloat(min(24, max(8, lineWidth + 6)))
+    }
+
+    var body: some View {
+        Circle()
+            .fill(Color(nsColor: NSColor(hexRGB: colorHex) ?? .black))
+            .frame(width: diameter, height: diameter)
+            .overlay {
+                Circle()
+                    .stroke(Color.primary.opacity(0.18), lineWidth: 1)
+            }
+            .frame(width: 28, height: 24)
     }
 }
 
