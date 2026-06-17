@@ -13,7 +13,7 @@ enum NameNormalizer {
 
     static func filenameValue(from displayName: String) -> String {
         displayName.unicodeScalars
-            .filter(CharacterSet.letters.contains)
+            .filter { CharacterSet.alphanumerics.contains($0) }
             .map(String.init)
             .joined()
     }
