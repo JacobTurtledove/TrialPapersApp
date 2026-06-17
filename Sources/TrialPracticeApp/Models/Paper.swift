@@ -17,6 +17,10 @@ final class Paper {
     var createdAt: Date
     var deletedAt: Date?
 
+    var primaryPDFRelativePath: String {
+        combinedPDFRelativePath ?? questionPDFRelativePath
+    }
+
     init(
         id: UUID = UUID(),
         subjectID: UUID,

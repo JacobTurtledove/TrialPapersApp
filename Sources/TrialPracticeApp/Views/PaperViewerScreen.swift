@@ -64,7 +64,7 @@ struct PaperViewerScreen: View {
     @StateObject private var solutionAnnotationSession = PDFAnnotationSession()
 
     private var questionURL: URL? {
-        fileURL(for: paper.combinedPDFRelativePath ?? paper.questionPDFRelativePath)
+        fileURL(for: paper.primaryPDFRelativePath)
     }
 
     private var solutionURL: URL? {
@@ -442,8 +442,7 @@ struct PaperViewerScreen: View {
         }
         do {
             try FinderRevealService.revealStoredItem(
-                relativePath: paper.combinedPDFRelativePath
-                    ?? paper.questionPDFRelativePath,
+                relativePath: paper.primaryPDFRelativePath,
                 rootURL: rootURL
             )
         } catch {
@@ -849,7 +848,7 @@ struct PaperViewerScreen: View {
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.pdf]
         savePanel.canCreateDirectories = true
-        let storedPath = paper.combinedPDFRelativePath ?? paper.questionPDFRelativePath
+        let storedPath = paper.primaryPDFRelativePath
         savePanel.nameFieldStringValue = (storedPath as NSString).lastPathComponent
 
         guard savePanel.runModal() == .OK, let destinationURL = savePanel.url else {

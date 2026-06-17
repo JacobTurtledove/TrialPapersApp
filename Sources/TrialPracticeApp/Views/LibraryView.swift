@@ -805,8 +805,7 @@ private struct SchoolLibraryView: View {
         }
         do {
             try FinderRevealService.revealStoredItem(
-                relativePath: paper.combinedPDFRelativePath
-                    ?? paper.questionPDFRelativePath,
+                relativePath: paper.primaryPDFRelativePath,
                 rootURL: rootURL
             )
         } catch {
@@ -881,7 +880,7 @@ private struct SchoolLibraryView: View {
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.pdf]
         savePanel.canCreateDirectories = true
-        let storedPath = paper.combinedPDFRelativePath ?? paper.questionPDFRelativePath
+        let storedPath = paper.primaryPDFRelativePath
         savePanel.nameFieldStringValue = (storedPath as NSString).lastPathComponent
 
         guard savePanel.runModal() == .OK, let destinationURL = savePanel.url else {

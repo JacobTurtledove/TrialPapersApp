@@ -19,6 +19,33 @@ struct PaperValidationTests {
     }
 
     @Test
+    func primaryPDFRelativePathUsesQuestionPathWhenCombinedPathIsMissing() {
+        let paper = Paper(
+            subjectID: UUID(),
+            schoolID: UUID(),
+            year: "2025",
+            questionPDFRelativePath: "question.pdf",
+            solutionsPDFRelativePath: "solutions.pdf"
+        )
+
+        #expect(paper.primaryPDFRelativePath == "question.pdf")
+    }
+
+    @Test
+    func primaryPDFRelativePathPrefersCombinedPathWhenPresent() {
+        let paper = Paper(
+            subjectID: UUID(),
+            schoolID: UUID(),
+            year: "2025",
+            questionPDFRelativePath: "question.pdf",
+            solutionsPDFRelativePath: "solutions.pdf",
+            combinedPDFRelativePath: "combined.pdf"
+        )
+
+        #expect(paper.primaryPDFRelativePath == "combined.pdf")
+    }
+
+    @Test
     func acceptsNumericYears() {
         #expect(PaperValidation.year(from: " 2025 ") == "2025")
     }

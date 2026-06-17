@@ -86,8 +86,7 @@ struct LibraryExportService {
     }
 
     func exportPaper(_ paper: Paper, to destinationURL: URL) throws -> URL {
-        let relativePath = paper.combinedPDFRelativePath ?? paper.questionPDFRelativePath
-        try copyStoredFile(relativePath: relativePath, to: destinationURL)
+        try copyStoredFile(relativePath: paper.primaryPDFRelativePath, to: destinationURL)
         return destinationURL
     }
 
