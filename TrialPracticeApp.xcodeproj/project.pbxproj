@@ -54,6 +54,7 @@
 		A10000000000000000000035 /* THSCSourcePresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* THSCSourcePresets.swift */; };
 		A10000000000000000000036 /* NESAPastPaperCatalogue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* NESAPastPaperCatalogue.swift */; };
 		A10000000000000000000037 /* StoredFilePath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000037 /* StoredFilePath.swift */; };
+		A10000000000000000000038 /* BinDeletionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000038 /* BinDeletionService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -106,6 +107,7 @@
 		A20000000000000000000035 /* THSCSourcePresets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = THSCSourcePresets.swift; sourceTree = "<group>"; };
 		A20000000000000000000036 /* NESAPastPaperCatalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NESAPastPaperCatalogue.swift; sourceTree = "<group>"; };
 		A20000000000000000000037 /* StoredFilePath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredFilePath.swift; sourceTree = "<group>"; };
+		A20000000000000000000038 /* BinDeletionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinDeletionService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -235,11 +237,20 @@
 		A40000000000000000000009 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				A4000000000000000000000F /* Bin */,
 				A4000000000000000000000B /* Library */,
 				A4000000000000000000000E /* NESA */,
 				A4000000000000000000000A /* PaperImport */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		A4000000000000000000000F /* Bin */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000038 /* BinDeletionService.swift */,
+			);
+			path = Bin;
 			sourceTree = "<group>";
 		};
 		A4000000000000000000000E /* NESA */ = {
@@ -393,6 +404,7 @@
 				A10000000000000000000035 /* THSCSourcePresets.swift in Sources */,
 				A10000000000000000000036 /* NESAPastPaperCatalogue.swift in Sources */,
 				A10000000000000000000037 /* StoredFilePath.swift in Sources */,
+				A10000000000000000000038 /* BinDeletionService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
