@@ -17,9 +17,19 @@ struct FlaggedQuestionSaveRequest {
 @MainActor
 struct FlaggedQuestionSaveService {
     let captureService: FlaggedQuestionCaptureService
+    private let persist: (FlaggedQuestion, ModelContext) throws -> Void
 
-    init(rootURL: URL) {
+    init(
+        rootURL: URL,
+        persist: @escaping (FlaggedQuestion, ModelContext) throws -> Void = {
+            flaggedQuestion,
+            modelContext in
+            modelContext.insert(flaggedQuestion)
+            try modelContext.save()
+        }
+    ) {
         captureService = FlaggedQuestionCaptureService(rootURL: rootURL)
+        self.persist = persist
     }
 
     func save(
@@ -56,8 +66,7 @@ struct FlaggedQuestionSaveService {
         )
 
         do {
-            modelContext.insert(flaggedQuestion)
-            try modelContext.save()
+            try persist(flaggedQuestion, modelContext)
             return flaggedQuestion
         } catch {
             modelContext.delete(flaggedQuestion)

@@ -5,6 +5,10 @@ import SwiftData
 import Testing
 @testable import TrialPracticeApp
 
+private enum FlaggedQuestionSaveServiceTestError: Error {
+    case persistenceFailed
+}
+
 struct FileWorkflowTests {
     @Test
     func exportsSubjectPapersAsSpecificationCompliantCSV() throws {
@@ -469,6 +473,75 @@ struct FileWorkflowTests {
         ))
         #expect(question.solutionImageRelativePath == nil)
         #expect(savedQuestions.map(\.id) == [question.id])
+    }
+
+    @Test
+    @MainActor
+    func flaggedQuestionSaveServiceRemovesImagesAfterPersistenceFailure() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let container = try ModelContainer(
+            for: FlaggedQuestion.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let questionURL = rootURL.appending(path: "paper.pdf")
+        try makePDF(pageCount: 1, at: questionURL)
+        let document = try #require(PDFDocument(url: questionURL))
+        let subject = Subject(displayName: "Maths Advanced", filenameValue: "MathsAdvanced")
+        let school = School(displayName: "Example School", filenameValue: "ExampleSchool")
+        let paper = Paper(
+            subjectID: subject.id,
+            schoolID: school.id,
+            year: "2025",
+            questionPDFRelativePath: "paper.pdf",
+            solutionsPDFRelativePath: "paper.pdf"
+        )
+        let request = FlaggedQuestionSaveRequest(
+            paper: paper,
+            subject: subject,
+            school: school,
+            questionDocument: document,
+            questionRange: PDFCaptureRange(
+                startPage: 0,
+                endPage: 0,
+                topBoundary: 0,
+                bottomBoundary: 1
+            ),
+            solutionDocument: document,
+            solutionRange: PDFCaptureRange(
+                startPage: 0,
+                endPage: 0,
+                topBoundary: 0,
+                bottomBoundary: 1
+            ),
+            questionNumber: "12a",
+            category: .mistake
+        )
+        var createdQuestion: FlaggedQuestion?
+        let service = FlaggedQuestionSaveService(rootURL: rootURL) {
+            flaggedQuestion,
+            modelContext in
+            createdQuestion = flaggedQuestion
+            modelContext.insert(flaggedQuestion)
+            throw FlaggedQuestionSaveServiceTestError.persistenceFailed
+        }
+
+        #expect(throws: FlaggedQuestionSaveServiceTestError.self) {
+            _ = try service.save(request, modelContext: container.mainContext)
+        }
+
+        let question = try #require(createdQuestion)
+        #expect(!FileManager.default.fileExists(
+            atPath: rootURL.appending(path: question.questionImageRelativePath).path
+        ))
+        if let solutionImageRelativePath = question.solutionImageRelativePath {
+            #expect(!FileManager.default.fileExists(
+                atPath: rootURL.appending(path: solutionImageRelativePath).path
+            ))
+        }
+        let savedQuestions = try container.mainContext.fetch(FetchDescriptor<FlaggedQuestion>())
+        #expect(savedQuestions.isEmpty)
     }
 
     @Test
