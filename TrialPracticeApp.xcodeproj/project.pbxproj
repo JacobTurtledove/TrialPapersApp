@@ -48,6 +48,7 @@
 		A1000000000000000000002F /* PaperLibraryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002F /* PaperLibraryCard.swift */; };
 		A10000000000000000000030 /* SchoolFolderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* SchoolFolderCard.swift */; };
 		A10000000000000000000031 /* SubjectEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* SubjectEditor.swift */; };
+		A10000000000000000000032 /* LibraryMutationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* LibraryMutationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -94,6 +95,7 @@
 		A2000000000000000000002F /* PaperLibraryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperLibraryCard.swift; sourceTree = "<group>"; };
 		A20000000000000000000030 /* SchoolFolderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolFolderCard.swift; sourceTree = "<group>"; };
 		A20000000000000000000031 /* SubjectEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectEditor.swift; sourceTree = "<group>"; };
+		A20000000000000000000032 /* LibraryMutationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryMutationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -149,6 +151,7 @@
 				A20000000000000000000029 /* AppDirectories.swift */,
 				A20000000000000000000006 /* AppState.swift */,
 				A2000000000000000000002A /* LibraryExportService.swift */,
+				A20000000000000000000032 /* LibraryMutationService.swift */,
 				A20000000000000000000007 /* LocalFileStore.swift */,
 				A20000000000000000000008 /* NameNormalizer.swift */,
 				A20000000000000000000009 /* PaperImportService.swift */,
@@ -353,6 +356,7 @@
 				A1000000000000000000002F /* PaperLibraryCard.swift in Sources */,
 				A10000000000000000000030 /* SchoolFolderCard.swift in Sources */,
 				A10000000000000000000031 /* SubjectEditor.swift in Sources */,
+				A10000000000000000000032 /* LibraryMutationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
