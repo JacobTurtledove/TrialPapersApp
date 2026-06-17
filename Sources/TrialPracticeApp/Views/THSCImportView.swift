@@ -1,70 +1,45 @@
 import SwiftData
 import SwiftUI
 
-enum THSCSolutionsFilter: String, CaseIterable, Identifiable {
-    case all = "All"
-    case withSolutions = "With Solutions"
-    case withoutSolutions = "Without Solutions"
-
-    var id: Self { self }
-
-    func includes(_ listing: THSCPaperListing) -> Bool {
-        switch self {
-        case .all:
-            true
-        case .withSolutions:
-            listing.hasSolutions
-        case .withoutSolutions:
-            !listing.hasSolutions
-        }
-    }
-}
-
-private struct THSCSchoolPaperGroup: Identifiable {
-    let id: String
-    let schoolName: String
-    let papers: [THSCPaperListing]
-}
-
 struct THSCImportView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var appState: AppState
-    @EnvironmentObject private var importCoordinator: THSCImportCoordinator
+    @EnvironmentObject var importCoordinator: THSCImportCoordinator
 
     @Query(sort: \Subject.displayName) private var subjects: [Subject]
     @Query private var schools: [School]
     @Query private var papers: [Paper]
     @Query private var importRecords: [THSCImportRecord]
 
-    @State private var listings: [THSCPaperListing] = []
-    @State private var selection: Set<String> = []
-    @State private var expandedSchoolIDs: Set<String> = []
-    @State private var searchText = ""
-    @State private var solutionsFilter = THSCSolutionsFilter.all
-    @State private var showAlreadyImported = false
-    @State private var isLoading = false
-    @State private var statusMessage: String?
+    @State var listings: [THSCPaperListing] = []
+    @State var selection: Set<String> = []
+    @State var expandedSchoolIDs: Set<String> = []
+    @State var searchText = ""
+    @State var solutionsFilter = THSCSolutionsFilter.all
+    @State var showAlreadyImported = false
+    @State var isLoading = false
+    @State var statusMessage: String?
     @State private var errorMessage: String?
     @State private var showSlowWebsiteWarning = false
     @State private var loadTask: Task<Void, Never>?
     @AppStorage("hasSeenTHSCSlowWebsiteWarning")
     private var hasSeenSlowWebsiteWarning = false
     @AppStorage("lastTHSCImportSubjectID")
-    private var selectedSubjectIDString = ""
+    var selectedSubjectIDString = ""
     @AppStorage("lastTHSCImportSourceID")
-    private var selectedSourceIDString = ""
+    var selectedSourceIDString = ""
 
     private let service = THSCImportService()
 
-    private var activeSubjects: [Subject] {
+    var activeSubjects: [Subject] {
         subjects.filter { $0.deletedAt == nil }
     }
 
-    private var selectedSubjectID: UUID? {
+    var selectedSubjectID: UUID? {
         UUID(uuidString: selectedSubjectIDString)
     }
 
-    private var selectedSource: THSCSource? {
+    var selectedSource: THSCSource? {
         THSCSource.presets.first { $0.id == selectedSourceIDString }
     }
 
@@ -95,7 +70,7 @@ struct THSCImportView: View {
         }
     }
 
-    private var schoolGroups: [THSCSchoolPaperGroup] {
+    var schoolGroups: [THSCSchoolPaperGroup] {
         Dictionary(grouping: filteredListings) { listing in
             NameNormalizer.displayName(from: listing.schoolName)
         }
@@ -180,257 +155,7 @@ struct THSCImportView: View {
         }
     }
 
-    private var controls: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Picker("Save to subject", selection: $selectedSubjectIDString) {
-                    Text("Select subject").tag("")
-                    ForEach(activeSubjects) { subject in
-                        Text(subject.displayName).tag(subject.id.uuidString)
-                    }
-                }
-                .frame(maxWidth: 320)
-
-                Picker("THSC collection", selection: $selectedSourceIDString) {
-                    Text("Select collection").tag("")
-                    ForEach(THSCSource.presets) { source in
-                        Text(source.name).tag(source.id)
-                    }
-                }
-                .frame(maxWidth: 340)
-
-                Button(listings.isEmpty ? "Load Papers" : "Reload Papers") {
-                    startLoadingPapers()
-                }
-                .disabled(selectedSource == nil || isLoading || importCoordinator.isImporting)
-
-                if isLoading {
-                    HStack(spacing: 8) {
-                        ProgressView()
-                            .controlSize(.small)
-                        Text("Contacting THSC…")
-                            .font(.callout.weight(.medium))
-                    }
-                    .foregroundStyle(.tint)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
-                    .background(.tint.opacity(0.1), in: Capsule())
-                }
-            }
-
-            if !listings.isEmpty {
-                HStack {
-                    TextField("Search school or year", text: $searchText)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(maxWidth: 360)
-
-                    Picker("Solutions", selection: $solutionsFilter) {
-                        ForEach(THSCSolutionsFilter.allCases) { filter in
-                            Text(filter.rawValue).tag(filter)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .frame(width: 340)
-
-                    Text("\(selection.count) of 10 selected")
-                        .foregroundStyle(selection.count == 10 ? .orange : .secondary)
-                    Spacer()
-                    Text(showAlreadyImported ? "Previously imported papers cannot be selected again." : "Previously imported papers are hidden.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-        .padding(20)
-    }
-
-    @ViewBuilder
-    private var paperList: some View {
-        if activeSubjects.isEmpty {
-            ContentUnavailableView(
-                "Create a Subject First",
-                systemImage: "folder.badge.plus",
-                description: Text("THSC papers need a subject folder in your library.")
-            )
-        } else if isLoading {
-            VStack(spacing: 18) {
-                ProgressView()
-                    .controlSize(.large)
-
-                Text("Loading Papers from THSC…")
-                    .font(.title2.bold())
-
-                Text("THSC is often very slow. Keep this page open while the website responds.")
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 440)
-            }
-            .padding(36)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(.tint.opacity(0.35), lineWidth: 2)
-            }
-            .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if listings.isEmpty {
-            ContentUnavailableView {
-                Label("No Papers Loaded", systemImage: "arrow.down.doc")
-            } description: {
-                Text("Load the selected THSC collection to view its available papers.")
-            } actions: {
-                Button {
-                    startLoadingPapers()
-                } label: {
-                    Label("Load Papers", systemImage: "arrow.down.doc.fill")
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(selectedSource == nil || importCoordinator.isImporting)
-            }
-        } else if schoolGroups.isEmpty {
-            ContentUnavailableView(
-                "No Papers to Show",
-                systemImage: "tray",
-                description: Text(showAlreadyImported ? "No papers match the current filters." : "All matching papers have already been imported or no papers match the current filters.")
-            )
-        } else {
-            List {
-                ForEach(schoolGroups) { group in
-                    schoolGroupRow(group)
-                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-
-                    if expandedSchoolIDs.contains(group.id) {
-                        ForEach(group.papers) { paper in
-                            paperRow(paper)
-                                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                                .transition(.opacity)
-                        }
-                    }
-                }
-            }
-            .listStyle(.inset)
-        }
-    }
-
-    private func schoolGroupRow(_ group: THSCSchoolPaperGroup) -> some View {
-        let isExpanded = expandedSchoolIDs.contains(group.id)
-        let selectedCount = group.papers.filter { selection.contains($0.id) }.count
-
-        return HStack(spacing: 10) {
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                .animation(.easeOut(duration: 0.12), value: isExpanded)
-                .frame(width: 14)
-
-            Image(systemName: isExpanded ? "folder.fill.badge.minus" : "folder.fill")
-                .foregroundStyle(.tint)
-                .frame(width: 24)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(group.schoolName)
-                    .font(.headline)
-                Text("\(group.papers.count) paper\(group.papers.count == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            if selectedCount > 0 {
-                Text("\(selectedCount) selected")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.tint)
-            }
-        }
-        .padding(.vertical, 6)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            toggleSchoolGroup(group.id)
-        }
-    }
-
-    private func paperRow(_ paper: THSCPaperListing) -> some View {
-        let imported = isImported(paper)
-        let conflict = hasLocalPaperConflict(paper)
-
-        return HStack(spacing: 12) {
-            Button {
-                toggleSelection(paper)
-            } label: {
-                Image(systemName: selection.contains(paper.id) ? "checkmark.square.fill" : "square")
-                    .font(.title3)
-            }
-            .buttonStyle(.plain)
-            .disabled(imported || conflict || importCoordinator.isImporting)
-
-            Text(paper.title)
-                .lineLimit(1)
-
-            Spacer()
-
-            Group {
-                if imported {
-                    Label("Imported", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                } else if conflict {
-                    Text("Already in library")
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .font(.caption)
-            .frame(width: 125, alignment: .trailing)
-        }
-        .padding(.leading, 30)
-        .padding(.vertical, 6)
-        .frame(maxWidth: .infinity, minHeight: 40)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if !imported, !conflict, !importCoordinator.isImporting {
-                toggleSelection(paper)
-            }
-        }
-    }
-
-    private var importBar: some View {
-        HStack {
-            Toggle("Show already imported papers", isOn: $showAlreadyImported)
-                .toggleStyle(.checkbox)
-                .disabled(listings.isEmpty)
-
-            Divider()
-                .frame(height: 24)
-
-            if let message = importCoordinator.statusMessage ?? statusMessage {
-                Text(message)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Button("Import \(selection.count) Paper\(selection.count == 1 ? "" : "s")") {
-                importSelectedPapers()
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(
-                selection.isEmpty ||
-                selectedSubjectID == nil ||
-                importCoordinator.isImporting ||
-                isLoading
-            )
-        }
-        .padding(.horizontal, 20)
-        .frame(height: 64)
-        .background(.bar)
-        .overlay(alignment: .top) {
-            Divider()
-        }
-    }
-
-    private func startLoadingPapers() {
+    func startLoadingPapers() {
         guard let source = selectedSource else { return }
         loadTask?.cancel()
         loadTask = Task {
@@ -461,7 +186,7 @@ struct THSCImportView: View {
         }
     }
 
-    private func toggleSelection(_ paper: THSCPaperListing) {
+    func toggleSelection(_ paper: THSCPaperListing) {
         if selection.contains(paper.id) {
             selection.remove(paper.id)
         } else if selection.count < 10 {
@@ -469,12 +194,12 @@ struct THSCImportView: View {
         }
     }
 
-    private func isImported(_ listing: THSCPaperListing) -> Bool {
+    func isImported(_ listing: THSCPaperListing) -> Bool {
         importIdentifiersForSelectedSource.contains(listing.id) ||
             importIdentifiersForSelectedSource.contains(listing.legacyIdentifier)
     }
 
-    private func toggleSchoolGroup(_ id: String) {
+    func toggleSchoolGroup(_ id: String) {
         withAnimation(.easeOut(duration: 0.12)) {
             if expandedSchoolIDs.contains(id) {
                 expandedSchoolIDs.remove(id)
@@ -484,7 +209,7 @@ struct THSCImportView: View {
         }
     }
 
-    private func hasLocalPaperConflict(_ listing: THSCPaperListing) -> Bool {
+    func hasLocalPaperConflict(_ listing: THSCPaperListing) -> Bool {
         guard let subjectID = selectedSubjectID else { return false }
         let normalizedSchool = NameNormalizer.displayName(from: listing.schoolName)
         guard let school = schools.first(where: {
@@ -499,7 +224,7 @@ struct THSCImportView: View {
         }
     }
 
-    private func importSelectedPapers() {
+    func importSelectedPapers() {
         guard
             let subjectID = selectedSubjectID,
             let subject = activeSubjects.first(where: { $0.id == subjectID }),
@@ -527,13 +252,5 @@ struct THSCImportView: View {
             modelContext: modelContext
         )
         selection.removeAll()
-    }
-}
-
-private extension String {
-    var normalizedTHSCSchoolGroupID: String {
-        split(whereSeparator: \.isWhitespace)
-            .joined(separator: " ")
-            .lowercased()
     }
 }

@@ -3,11 +3,6 @@ import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
-private enum PDFPickerTarget {
-    case question
-    case solutions
-}
-
 struct AddPaperView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext

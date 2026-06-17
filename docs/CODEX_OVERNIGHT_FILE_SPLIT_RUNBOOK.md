@@ -1449,37 +1449,178 @@ Safest next step:
 - Reopen/restart Xcode build services or the workspace sync provider, then rerun the required xcodebuild command before continuing with E2.
 
 ### Step E2 — Move PDFInkOverlayProvider
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Infrastructure/PDF/PDFInkOverlayProvider.swift
+- Sources/TrialPracticeApp/Infrastructure/PDF/PDFDrawingSupport.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed after `swift package clean`
+- xcodebuild: passed
+Notes:
+- Moved PDFInkOverlayProvider into its own PDF infrastructure file.
+- Changed PDFInkOverlayView from private to internal so the moved provider can keep using the existing overlay view until E3.
+- The first `swift test` attempt hit an unrelated SwiftPM/OneDrive I/O timeout reading `.build/plugin-tools.yaml`; `swift package clean` cleared the generated cache and the rerun passed.
 
 ### Step E3 — Move PDFInkOverlayView
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Infrastructure/PDF/PDFInkOverlayView.swift
+- Sources/TrialPracticeApp/Infrastructure/PDF/PDFDrawingSupport.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved PDFInkOverlayView into its own PDF infrastructure file.
+- Preserved mouse handling, stroke decimation, eraser callback, and drawing behavior.
 
 ### Step E4 — Move geometry helpers
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Infrastructure/PDF/PDFInkGeometry.swift
+- Sources/TrialPracticeApp/Infrastructure/PDF/PDFDrawingSupport.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved smoothedPath, decimatedPoints, inkAnnotation, approximatePoints, cubicBezierPoint, and distanceFromPointToSegment into PDFInkGeometry.swift.
+- Kept the helper visibility the same where possible: public-to-module entry points remain internal, approximation helpers remain private within the new file.
 
 ### Step E5 — Move NSColor hex extension
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Infrastructure/PDF/NSColor+Hex.swift
+- Sources/TrialPracticeApp/Infrastructure/PDF/PDFDrawingSupport.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved the NSColor hex initializer and hexRGBString computed property to NSColor+Hex.swift.
+- Removed the now-empty PDFDrawingSupport.swift from the filesystem, PDF group, and target sources build phase.
 
 ### Step F1 — Move THSC filters/group models
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/THSCImport/THSCImportModels.swift
+- Sources/TrialPracticeApp/Views/THSCImportView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved THSCSolutionsFilter, THSCSchoolPaperGroup, and String.normalizedTHSCSchoolGroupID into THSCImportModels.swift.
+- Removed private access from the moved group/string helper as required by file extraction.
 
 ### Step F2 — Extract THSC controls
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/THSCImport/THSCImportControls.swift
+- Sources/TrialPracticeApp/Views/THSCImportView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved the THSC import controls view builder into THSCImportControls.swift.
+- Kept controls as an extension on THSCImportView so bindings and existing loading actions are preserved.
+- Removed private access only from state/computed helpers needed by the extracted controls extension.
+- The first xcodebuild attempt failed with an unrelated DerivedData build database disk I/O error; rerunning the exact command passed.
 
 ### Step F3 — Extract THSC paper list
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/THSCImport/THSCPaperListView.swift
+- Sources/TrialPracticeApp/Views/THSCImportView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed on retry
+Notes:
+- Moved paperList, schoolGroupRow(_:), and paperRow(_:) into THSCPaperListView.swift.
+- Kept the list builders as an extension on THSCImportView so existing selection, import-state, and conflict helpers are reused unchanged.
+- The first xcodebuild attempt compiled Swift successfully but failed at final link output with a DerivedData `ld: open() failed, errno=2`; rerunning the exact command passed.
 
 ### Step F4 — Extract THSC import bar
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/THSCImport/THSCImportBar.swift
+- Sources/TrialPracticeApp/Views/THSCImportView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved the bottom THSC import bar into THSCImportBar.swift as a THSCImportView extension.
+- Preserved the existing show-already-imported toggle, status message display, and import button enablement.
+- Kept importSelectedPapers() and import identifier logic in THSCImportView; only the view builder moved.
 
 ### Step G1 — Move revision booklet filters
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/RevisionBooklets/RevisionBookletFilters.swift
+- Sources/TrialPracticeApp/Views/RevisionBookletsView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed after removing the sync-resurrected legacy PDFDrawingSupport.swift file and running `swift package clean`
+- xcodebuild: passed
+Notes:
+- Moved BookletCategoryFilter and BookletCompletionFilter out of RevisionBookletsView.swift.
+- Preserved the existing raw values and Identifiable behavior.
+- SwiftPM initially kept discovering the deleted PDFDrawingSupport.swift after it reappeared on disk; removing it again restored the intended split-file state.
+- No SwiftData model, storage, export, or migration behavior changed.
 
 ### Step G2 — Extract revision booklet controls
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/RevisionBooklets/RevisionBookletControls.swift
+- Sources/TrialPracticeApp/Views/RevisionBookletsView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: first attempt failed because DerivedData build.db was locked; immediate retry passed
+Notes:
+- Moved exportControls into a RevisionBookletsView extension.
+- Preserved the subject, category, completion, count, progress, and Export PDF controls.
+- Kept exportBooklet() and export path behavior in RevisionBookletsView; only the view builder moved.
+- No SwiftData model, storage, export, or migration behavior changed.
 
 ### Step G3 — Extract revision booklet row
-Status: Not started
+Status: Completed
+Files changed:
+- Sources/TrialPracticeApp/Features/RevisionBooklets/RevisionBookletQuestionRow.swift
+- Sources/TrialPracticeApp/Views/RevisionBookletsView.swift
+- TrialPracticeApp.xcodeproj/project.pbxproj
+- docs/CODEX_OVERNIGHT_FILE_SPLIT_RUNBOOK.md
+Project file updated: yes
+Checks:
+- swift test: passed
+- xcodebuild: passed
+Notes:
+- Moved the inline filtered question row UI into RevisionBookletQuestionRow.
+- Preserved the category icon/color, school/year subtitle, category label, solution indicator, and row padding.
+- No SwiftData model, storage, export, or migration behavior changed.
 
 ### Step H1 — Move PDFPickerTarget
 Status: Not started

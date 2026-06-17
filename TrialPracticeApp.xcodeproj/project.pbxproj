@@ -49,7 +49,6 @@
 		A10000000000000000000030 /* SchoolFolderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* SchoolFolderCard.swift */; };
 		A10000000000000000000031 /* SubjectEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* SubjectEditor.swift */; };
 		A10000000000000000000032 /* LibraryMutationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* LibraryMutationService.swift */; };
-		A10000000000000000000033 /* PDFDrawingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* PDFDrawingSupport.swift */; };
 		A10000000000000000000034 /* FlaggedQuestionSaveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* FlaggedQuestionSaveService.swift */; };
 		A10000000000000000000035 /* THSCSourcePresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* THSCSourcePresets.swift */; };
 		A10000000000000000000036 /* NESAPastPaperCatalogue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* NESAPastPaperCatalogue.swift */; };
@@ -81,6 +80,18 @@
 		A10000000000000000000050 /* SelectablePDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000050 /* SelectablePDFView.swift */; };
 		A10000000000000000000051 /* PDFAnnotationEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000051 /* PDFAnnotationEditing.swift */; };
 		A10000000000000000000052 /* PDFDrawingTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000052 /* PDFDrawingTypes.swift */; };
+		A10000000000000000000053 /* PDFInkOverlayProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000053 /* PDFInkOverlayProvider.swift */; };
+		A10000000000000000000054 /* PDFInkOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000054 /* PDFInkOverlayView.swift */; };
+		A10000000000000000000055 /* PDFInkGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000055 /* PDFInkGeometry.swift */; };
+		A10000000000000000000056 /* NSColor+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000056 /* NSColor+Hex.swift */; };
+		A10000000000000000000057 /* THSCImportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000057 /* THSCImportModels.swift */; };
+		A10000000000000000000058 /* THSCImportControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000058 /* THSCImportControls.swift */; };
+		A10000000000000000000059 /* THSCPaperListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000059 /* THSCPaperListView.swift */; };
+		A1000000000000000000005A /* THSCImportBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005A /* THSCImportBar.swift */; };
+		A1000000000000000000005B /* RevisionBookletFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005B /* RevisionBookletFilters.swift */; };
+		A1000000000000000000005C /* RevisionBookletControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005C /* RevisionBookletControls.swift */; };
+		A1000000000000000000005D /* RevisionBookletQuestionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005D /* RevisionBookletQuestionRow.swift */; };
+		A1000000000000000000005E /* PDFPickerTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005E /* PDFPickerTarget.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -128,7 +139,6 @@
 		A20000000000000000000030 /* SchoolFolderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolFolderCard.swift; sourceTree = "<group>"; };
 		A20000000000000000000031 /* SubjectEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectEditor.swift; sourceTree = "<group>"; };
 		A20000000000000000000032 /* LibraryMutationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryMutationService.swift; sourceTree = "<group>"; };
-		A20000000000000000000033 /* PDFDrawingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFDrawingSupport.swift; sourceTree = "<group>"; };
 		A20000000000000000000034 /* FlaggedQuestionSaveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedQuestionSaveService.swift; sourceTree = "<group>"; };
 		A20000000000000000000035 /* THSCSourcePresets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = THSCSourcePresets.swift; sourceTree = "<group>"; };
 		A20000000000000000000036 /* NESAPastPaperCatalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NESAPastPaperCatalogue.swift; sourceTree = "<group>"; };
@@ -160,6 +170,18 @@
 		A20000000000000000000050 /* SelectablePDFView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectablePDFView.swift; sourceTree = "<group>"; };
 		A20000000000000000000051 /* PDFAnnotationEditing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFAnnotationEditing.swift; sourceTree = "<group>"; };
 		A20000000000000000000052 /* PDFDrawingTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFDrawingTypes.swift; sourceTree = "<group>"; };
+		A20000000000000000000053 /* PDFInkOverlayProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFInkOverlayProvider.swift; sourceTree = "<group>"; };
+		A20000000000000000000054 /* PDFInkOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFInkOverlayView.swift; sourceTree = "<group>"; };
+		A20000000000000000000055 /* PDFInkGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFInkGeometry.swift; sourceTree = "<group>"; };
+		A20000000000000000000056 /* NSColor+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSColor+Hex.swift"; sourceTree = "<group>"; };
+		A20000000000000000000057 /* THSCImportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = THSCImportModels.swift; sourceTree = "<group>"; };
+		A20000000000000000000058 /* THSCImportControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = THSCImportControls.swift; sourceTree = "<group>"; };
+		A20000000000000000000059 /* THSCPaperListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = THSCPaperListView.swift; sourceTree = "<group>"; };
+		A2000000000000000000005A /* THSCImportBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = THSCImportBar.swift; sourceTree = "<group>"; };
+		A2000000000000000000005B /* RevisionBookletFilters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevisionBookletFilters.swift; sourceTree = "<group>"; };
+		A2000000000000000000005C /* RevisionBookletControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevisionBookletControls.swift; sourceTree = "<group>"; };
+		A2000000000000000000005D /* RevisionBookletQuestionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevisionBookletQuestionRow.swift; sourceTree = "<group>"; };
+		A2000000000000000000005E /* PDFPickerTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPickerTarget.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -272,7 +294,6 @@
 		A4000000000000000000000D /* PDF */ = {
 			isa = PBXGroup;
 			children = (
-				A20000000000000000000033 /* PDFDrawingSupport.swift */,
 				A2000000000000000000004A /* PDFPageSelection.swift */,
 				A2000000000000000000004B /* PDFDocumentLoader.swift */,
 				A2000000000000000000004C /* PDFAnnotationSession.swift */,
@@ -282,6 +303,10 @@
 				A20000000000000000000050 /* SelectablePDFView.swift */,
 				A20000000000000000000051 /* PDFAnnotationEditing.swift */,
 				A20000000000000000000052 /* PDFDrawingTypes.swift */,
+				A20000000000000000000053 /* PDFInkOverlayProvider.swift */,
+				A20000000000000000000054 /* PDFInkOverlayView.swift */,
+				A20000000000000000000055 /* PDFInkGeometry.swift */,
+				A20000000000000000000056 /* NSColor+Hex.swift */,
 			);
 			path = PDF;
 			sourceTree = "<group>";
@@ -304,8 +329,31 @@
 				A4000000000000000000000E /* NESA */,
 				A4000000000000000000000A /* PaperImport */,
 				A40000000000000000000012 /* PaperViewer */,
+				A40000000000000000000014 /* RevisionBooklets */,
+				A40000000000000000000013 /* THSCImport */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000014 /* RevisionBooklets */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000005B /* RevisionBookletFilters.swift */,
+				A2000000000000000000005C /* RevisionBookletControls.swift */,
+				A2000000000000000000005D /* RevisionBookletQuestionRow.swift */,
+			);
+			path = RevisionBooklets;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000013 /* THSCImport */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000057 /* THSCImportModels.swift */,
+				A20000000000000000000058 /* THSCImportControls.swift */,
+				A20000000000000000000059 /* THSCPaperListView.swift */,
+				A2000000000000000000005A /* THSCImportBar.swift */,
+			);
+			path = THSCImport;
 			sourceTree = "<group>";
 		};
 		A40000000000000000000012 /* PaperViewer */ = {
@@ -363,6 +411,7 @@
 		A4000000000000000000000A /* PaperImport */ = {
 			isa = PBXGroup;
 			children = (
+				A2000000000000000000005E /* PDFPickerTarget.swift */,
 				A2000000000000000000002D /* PaperFileNames.swift */,
 				A2000000000000000000002C /* PaperValidation.swift */,
 			);
@@ -501,7 +550,6 @@
 				A10000000000000000000030 /* SchoolFolderCard.swift in Sources */,
 				A10000000000000000000031 /* SubjectEditor.swift in Sources */,
 				A10000000000000000000032 /* LibraryMutationService.swift in Sources */,
-				A10000000000000000000033 /* PDFDrawingSupport.swift in Sources */,
 				A10000000000000000000034 /* FlaggedQuestionSaveService.swift in Sources */,
 				A10000000000000000000035 /* THSCSourcePresets.swift in Sources */,
 				A10000000000000000000036 /* NESAPastPaperCatalogue.swift in Sources */,
@@ -533,6 +581,18 @@
 				A10000000000000000000050 /* SelectablePDFView.swift in Sources */,
 				A10000000000000000000051 /* PDFAnnotationEditing.swift in Sources */,
 				A10000000000000000000052 /* PDFDrawingTypes.swift in Sources */,
+				A10000000000000000000053 /* PDFInkOverlayProvider.swift in Sources */,
+				A10000000000000000000054 /* PDFInkOverlayView.swift in Sources */,
+				A10000000000000000000055 /* PDFInkGeometry.swift in Sources */,
+				A10000000000000000000056 /* NSColor+Hex.swift in Sources */,
+				A10000000000000000000057 /* THSCImportModels.swift in Sources */,
+				A10000000000000000000058 /* THSCImportControls.swift in Sources */,
+				A10000000000000000000059 /* THSCPaperListView.swift in Sources */,
+				A1000000000000000000005A /* THSCImportBar.swift in Sources */,
+				A1000000000000000000005B /* RevisionBookletFilters.swift in Sources */,
+				A1000000000000000000005C /* RevisionBookletControls.swift in Sources */,
+				A1000000000000000000005D /* RevisionBookletQuestionRow.swift in Sources */,
+				A1000000000000000000005E /* PDFPickerTarget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
