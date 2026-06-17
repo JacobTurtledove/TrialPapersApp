@@ -799,61 +799,41 @@ struct PaperViewerScreen: View {
         isSavingQuestion = true
 
         do {
-            let service = FlaggedQuestionCaptureService(rootURL: rootURL)
-            let questionPNG = try service.capturePNG(
-                from: questionDocument,
-                range: questionRange
-            )
-
-            let solutionPNG: Data?
+            let solutionDocument: PDFDocument?
+            let solutionRange: PDFCaptureRange?
             if includeSolution {
                 guard
                     let solutionURL,
-                    let solutionDocument = loadPDFDocument(
+                    let loadedSolutionDocument = loadPDFDocument(
                         url: solutionURL,
                         selection: solutionSelection
                     ),
-                    let solutionRange = solutionController.captureRange()
+                    let loadedSolutionRange = solutionController.captureRange()
                 else {
                     throw FlaggedQuestionCaptureService.CaptureError.invalidPageRange
                 }
-                solutionPNG = try service.capturePNG(
-                    from: solutionDocument,
-                    range: solutionRange
-                )
+                solutionDocument = loadedSolutionDocument
+                solutionRange = loadedSolutionRange
             } else {
-                solutionPNG = nil
+                solutionDocument = nil
+                solutionRange = nil
             }
 
-            let images = try service.saveImages(
-                questionPNG: questionPNG,
-                solutionPNG: solutionPNG,
-                subject: subject,
-                school: school,
-                year: paper.year,
-                questionNumber: questionNumber,
-                category: category
+            _ = try FlaggedQuestionSaveService(rootURL: rootURL).save(
+                FlaggedQuestionSaveRequest(
+                    paper: paper,
+                    subject: subject,
+                    school: school,
+                    questionDocument: questionDocument,
+                    questionRange: questionRange,
+                    solutionDocument: solutionDocument,
+                    solutionRange: solutionRange,
+                    questionNumber: questionNumber,
+                    category: category
+                ),
+                modelContext: modelContext
             )
-            let flaggedQuestion = FlaggedQuestion(
-                paperID: paper.id,
-                subjectID: subject.id,
-                schoolID: school.id,
-                year: paper.year,
-                questionNumber: questionNumber.trimmingCharacters(in: .whitespacesAndNewlines),
-                category: category,
-                questionImageRelativePath: images.questionRelativePath,
-                solutionImageRelativePath: images.solutionRelativePath
-            )
-
-            do {
-                modelContext.insert(flaggedQuestion)
-                try modelContext.save()
-                finishFlagging()
-            } catch {
-                modelContext.delete(flaggedQuestion)
-                try? service.deleteImages(for: flaggedQuestion)
-                throw error
-            }
+            finishFlagging()
         } catch {
             captureError = error.localizedDescription
             isSavingQuestion = false

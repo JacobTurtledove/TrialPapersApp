@@ -50,6 +50,7 @@
 		A10000000000000000000031 /* SubjectEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* SubjectEditor.swift */; };
 		A10000000000000000000032 /* LibraryMutationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* LibraryMutationService.swift */; };
 		A10000000000000000000033 /* PDFDrawingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* PDFDrawingSupport.swift */; };
+		A10000000000000000000034 /* FlaggedQuestionSaveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* FlaggedQuestionSaveService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -98,6 +99,7 @@
 		A20000000000000000000031 /* SubjectEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectEditor.swift; sourceTree = "<group>"; };
 		A20000000000000000000032 /* LibraryMutationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryMutationService.swift; sourceTree = "<group>"; };
 		A20000000000000000000033 /* PDFDrawingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFDrawingSupport.swift; sourceTree = "<group>"; };
+		A20000000000000000000034 /* FlaggedQuestionSaveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedQuestionSaveService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -158,6 +160,7 @@
 				A20000000000000000000008 /* NameNormalizer.swift */,
 				A20000000000000000000009 /* PaperImportService.swift */,
 				A20000000000000000000017 /* FlaggedQuestionCaptureService.swift */,
+				A20000000000000000000034 /* FlaggedQuestionSaveService.swift */,
 				A2000000000000000000001A /* RevisionBookletService.swift */,
 				A2000000000000000000001D /* SubjectPaperCSVService.swift */,
 				A2000000000000000000001F /* THSCImportService.swift */,
@@ -369,6 +372,7 @@
 				A10000000000000000000031 /* SubjectEditor.swift in Sources */,
 				A10000000000000000000032 /* LibraryMutationService.swift in Sources */,
 				A10000000000000000000033 /* PDFDrawingSupport.swift in Sources */,
+				A10000000000000000000034 /* FlaggedQuestionSaveService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

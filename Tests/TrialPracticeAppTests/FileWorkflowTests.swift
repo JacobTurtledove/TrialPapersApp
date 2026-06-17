@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import PDFKit
+import SwiftData
 import Testing
 @testable import TrialPracticeApp
 
@@ -409,6 +410,65 @@ struct FileWorkflowTests {
             try Data(contentsOf: rootURL.appending(path: first.questionRelativePath)) ==
                 Data("question-one".utf8)
         )
+    }
+
+    @Test
+    @MainActor
+    func flaggedQuestionSaveServiceSavesModelAndImages() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let container = try ModelContainer(
+            for: FlaggedQuestion.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let questionURL = rootURL.appending(path: "paper.pdf")
+        try makePDF(pageCount: 1, at: questionURL)
+        let document = try #require(PDFDocument(url: questionURL))
+        let subject = Subject(displayName: "Maths Advanced", filenameValue: "MathsAdvanced")
+        let school = School(displayName: "Example School", filenameValue: "ExampleSchool")
+        let paper = Paper(
+            subjectID: subject.id,
+            schoolID: school.id,
+            year: "2025",
+            questionPDFRelativePath: "paper.pdf",
+            solutionsPDFRelativePath: "paper.pdf"
+        )
+        let request = FlaggedQuestionSaveRequest(
+            paper: paper,
+            subject: subject,
+            school: school,
+            questionDocument: document,
+            questionRange: PDFCaptureRange(
+                startPage: 0,
+                endPage: 0,
+                topBoundary: 0,
+                bottomBoundary: 1
+            ),
+            solutionDocument: nil,
+            solutionRange: nil,
+            questionNumber: " 12a ",
+            category: .unlearnedContent
+        )
+
+        let question = try FlaggedQuestionSaveService(rootURL: rootURL).save(
+            request,
+            modelContext: container.mainContext
+        )
+        let savedQuestions = try container.mainContext.fetch(FetchDescriptor<FlaggedQuestion>())
+
+        #expect(question.paperID == paper.id)
+        #expect(question.subjectID == subject.id)
+        #expect(question.schoolID == school.id)
+        #expect(question.year == "2025")
+        #expect(question.questionNumber == "12a")
+        #expect(question.category == .unlearnedContent)
+        #expect(question.questionImageRelativePath.contains("/Unlearned Content/2025/"))
+        #expect(FileManager.default.fileExists(
+            atPath: rootURL.appending(path: question.questionImageRelativePath).path
+        ))
+        #expect(question.solutionImageRelativePath == nil)
+        #expect(savedQuestions.map(\.id) == [question.id])
     }
 
     @Test
