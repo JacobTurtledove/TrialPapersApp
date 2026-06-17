@@ -9,6 +9,7 @@ struct NESAPastPaperCatalogueTests {
 
         #expect(courses.count >= 30)
         #expect(Set(courses.map(\.id)).count == courses.count)
+        #expect(Set(courses.map(\.slug)).count == courses.count)
         #expect(courses.allSatisfy {
             $0.url.scheme == "https" &&
             $0.url.host == "www.nsw.gov.au" &&
@@ -33,4 +34,3 @@ struct NESAPastPaperCatalogueTests {
         )
     }
 }
-
