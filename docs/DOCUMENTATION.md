@@ -105,6 +105,8 @@ paper path, and rolls back created files if persistence fails.
 
 `PaperViewerScreen` coordinates paper display, question/solution page modes,
 annotation tools, export/reveal actions, and flagged-question capture.
+Pen strokes are stored as PDF ink annotations, and the eraser removes whole ink
+strokes from the annotatable PDF document.
 PDFKit bridge code lives under `Infrastructure/PDF`.
 
 ### Flagged Questions

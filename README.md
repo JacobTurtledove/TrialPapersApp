@@ -346,6 +346,8 @@ The viewer provides:
 - zoom in;
 - zoom out;
 - fit width;
+- persisted pen annotations;
+- stroke erasing for PDF ink annotations;
 - paper completion checkbox;
 - PDF export;
 - Finder reveal; and
@@ -625,7 +627,7 @@ metadata and file operations.
 - Schools are not managed as independent top-level entities.
 - Paper uniqueness is primarily enforced by UI and destination files, not by a
   compound unique database constraint.
-- The PDF viewer does not edit or annotate original PDFs.
+- PDF annotation changes are written back to the stored paper PDF when saved.
 - Revision state is a completed/incomplete flag; there is no spaced repetition
   scheduler.
 

@@ -41,7 +41,9 @@ extension SelectablePDFView {
     }
 
     private func isInkAnnotation(_ annotation: PDFAnnotation) -> Bool {
-        annotation.type == PDFAnnotationSubtype.ink.rawValue
+        guard let type = annotation.type else { return false }
+        let normalizedType = type.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        return normalizedType.caseInsensitiveCompare("Ink") == .orderedSame
     }
 
     func commitInkStroke(_ stroke: PDFInkStroke, toDisplayedPage displayedPage: PDFPage) {

@@ -674,6 +674,64 @@ struct FileWorkflowTests {
         #expect(booklet.page(at: 4)?.string?.contains("No solution provided") == true)
     }
 
+    @Test
+    func inkEraserHitTestingMatchesLocalAnnotationPathCoordinates() {
+        let annotation = makeInkAnnotation(
+            bounds: NSRect(x: 100, y: 100, width: 60, height: 40),
+            start: NSPoint(x: 0, y: 20),
+            end: NSPoint(x: 50, y: 20)
+        )
+
+        #expect(inkAnnotation(annotation, isNear: NSPoint(x: 125, y: 120), radius: 6))
+        #expect(!inkAnnotation(annotation, isNear: NSPoint(x: 125, y: 150), radius: 6))
+    }
+
+    @Test
+    func inkEraserHitTestingMatchesPageAnnotationPathCoordinates() {
+        let annotation = makeInkAnnotation(
+            bounds: NSRect(x: 100, y: 100, width: 60, height: 40),
+            start: NSPoint(x: 100, y: 120),
+            end: NSPoint(x: 150, y: 120)
+        )
+
+        #expect(inkAnnotation(annotation, isNear: NSPoint(x: 125, y: 120), radius: 6))
+        #expect(!inkAnnotation(annotation, isNear: NSPoint(x: 125, y: 150), radius: 6))
+    }
+
+    @Test
+    @MainActor
+    func eraserRemovesPDFKitInkAnnotation() throws {
+        let document = PDFDocument()
+        let image = NSImage(size: NSSize(width: 200, height: 200))
+        image.lockFocus()
+        NSColor.white.setFill()
+        NSRect(x: 0, y: 0, width: 200, height: 200).fill()
+        image.unlockFocus()
+
+        let page = try #require(PDFPage(image: image))
+        let annotation = makeInkAnnotation(
+            bounds: NSRect(x: 100, y: 100, width: 60, height: 40),
+            start: NSPoint(x: 0, y: 20),
+            end: NSPoint(x: 50, y: 20)
+        )
+        page.addAnnotation(annotation)
+        document.insert(page, at: 0)
+
+        let pdfView = SelectablePDFView()
+        pdfView.document = document
+        pdfView.sourceDocument = document
+        pdfView.pageSelection = .all
+        var didChangeAnnotations = false
+        pdfView.onAnnotationsChanged = {
+            didChangeAnnotations = true
+        }
+
+        pdfView.eraseInkAnnotation(onDisplayedPage: page, at: NSPoint(x: 125, y: 120))
+
+        #expect(page.annotations.isEmpty)
+        #expect(didChangeAnnotations)
+    }
+
     private func temporaryDirectory() throws -> URL {
         let url = FileManager.default.temporaryDirectory
             .appending(path: "TrialPracticeAppTests-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -723,5 +781,18 @@ struct FileWorkflowTests {
             throw CocoaError(.fileWriteUnknown)
         }
         try png.write(to: url)
+    }
+
+    private func makeInkAnnotation(bounds: NSRect, start: NSPoint, end: NSPoint) -> PDFAnnotation {
+        let annotation = PDFAnnotation(bounds: bounds, forType: .ink, withProperties: nil)
+        let border = PDFBorder()
+        border.lineWidth = 4
+        annotation.border = border
+
+        let path = NSBezierPath()
+        path.move(to: start)
+        path.line(to: end)
+        annotation.add(path)
+        return annotation
     }
 }

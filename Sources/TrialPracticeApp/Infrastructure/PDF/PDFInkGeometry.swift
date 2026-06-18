@@ -51,7 +51,8 @@ func decimatedPoints(_ points: [NSPoint], minimumDistance: CGFloat) -> [NSPoint]
 }
 
 func inkAnnotation(_ annotation: PDFAnnotation, isNear point: NSPoint, radius: CGFloat) -> Bool {
-    guard annotation.bounds.insetBy(dx: -radius, dy: -radius).contains(point) else {
+    let effectiveRadius = max(radius, CGFloat(annotation.border?.lineWidth ?? 0) + 4)
+    guard annotation.bounds.insetBy(dx: -effectiveRadius, dy: -effectiveRadius).contains(point) else {
         return false
     }
 
@@ -60,22 +61,39 @@ func inkAnnotation(_ annotation: PDFAnnotation, isNear point: NSPoint, radius: C
     }
 
     for path in paths {
-        let pagePoints = approximatePoints(from: path).map {
+        let pathPoints = approximatePoints(from: path)
+        if pathPointsAreNear(pathPoints, point: point, radius: effectiveRadius) {
+            return true
+        }
+
+        let pagePoints = pathPoints.map {
             NSPoint(
                 x: $0.x + annotation.bounds.minX,
                 y: $0.y + annotation.bounds.minY
             )
         }
-        guard pagePoints.count > 1 else { continue }
+        if pathPointsAreNear(pagePoints, point: point, radius: effectiveRadius) {
+            return true
+        }
+    }
 
-        for index in 0..<(pagePoints.count - 1) {
-            if distanceFromPointToSegment(
-                point: point,
-                start: pagePoints[index],
-                end: pagePoints[index + 1]
-            ) <= radius {
-                return true
-            }
+    return false
+}
+
+private func pathPointsAreNear(_ pathPoints: [NSPoint], point: NSPoint, radius: CGFloat) -> Bool {
+    if pathPoints.count == 1, let pathPoint = pathPoints.first {
+        return hypot(pathPoint.x - point.x, pathPoint.y - point.y) <= radius
+    }
+
+    guard pathPoints.count > 1 else { return false }
+
+    for index in 0..<(pathPoints.count - 1) {
+        if distanceFromPointToSegment(
+            point: point,
+            start: pathPoints[index],
+            end: pathPoints[index + 1]
+        ) <= radius {
+            return true
         }
     }
 
