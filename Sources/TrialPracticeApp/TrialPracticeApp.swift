@@ -28,6 +28,7 @@ struct TrialPracticeApp: App {
             School.self,
             Paper.self,
             FlaggedQuestion.self,
+            FlaggedQuestionAttempt.self,
             THSCImportRecord.self
         ])
 

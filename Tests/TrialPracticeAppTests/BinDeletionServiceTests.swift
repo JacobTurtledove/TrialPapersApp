@@ -63,6 +63,7 @@ struct BinDeletionServiceTests {
             subject,
             papers: [paper, otherPaper],
             flaggedQuestions: [question],
+            attempts: [],
             importRecords: [importRecord]
         )
 
@@ -128,6 +129,7 @@ struct BinDeletionServiceTests {
         try BinDeletionService(rootURL: rootURL, modelContext: context).permanentlyDelete(
             paper,
             flaggedQuestions: [question],
+            attempts: [],
             importRecords: [importRecord]
         )
 
@@ -164,18 +166,29 @@ struct BinDeletionServiceTests {
             questionImageRelativePath: "Flagged Questions/Physics/Mistakes/q1.png",
             solutionImageRelativePath: "Flagged Questions/Physics/Mistakes/q1-solution.png"
         )
+        let attempt = FlaggedQuestionAttempt(
+            questionID: question.id,
+            outcome: .wrong,
+            confidence: .low,
+            appliedStatus: .needsReview
+        )
         try insertAndSave(in: context) {
             $0.insert(paper)
             $0.insert(question)
+            $0.insert(attempt)
         }
         try writeFile("paper", at: rootURL.appending(path: paper.questionPDFRelativePath))
         try writeFile("question", at: rootURL.appending(path: question.questionImageRelativePath))
         try writeFile("solution", at: rootURL.appending(path: try #require(question.solutionImageRelativePath)))
 
-        try BinDeletionService(rootURL: rootURL, modelContext: context).permanentlyDelete(question)
+        try BinDeletionService(rootURL: rootURL, modelContext: context).permanentlyDelete(
+            question,
+            attempts: [attempt]
+        )
 
         #expect(try context.fetch(FetchDescriptor<Paper>()).map(\.id) == [paper.id])
         #expect(try context.fetch(FetchDescriptor<FlaggedQuestion>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<FlaggedQuestionAttempt>()).isEmpty)
         #expect(FileManager.default.fileExists(atPath: rootURL.appending(path: paper.questionPDFRelativePath).path))
         #expect(!FileManager.default.fileExists(atPath: rootURL.appending(path: question.questionImageRelativePath).path))
         #expect(!FileManager.default.fileExists(
@@ -211,7 +224,12 @@ struct BinDeletionServiceTests {
         )
 
         #expect(throws: BinDeletionServiceTestError.saveFailed) {
-            try service.permanentlyDelete(paper, flaggedQuestions: [], importRecords: [])
+            try service.permanentlyDelete(
+                paper,
+                flaggedQuestions: [],
+                attempts: [],
+                importRecords: []
+            )
         }
 
         #expect(try context.fetch(FetchDescriptor<Paper>()).map(\.id) == [paper.id])
@@ -225,6 +243,7 @@ struct BinDeletionServiceTests {
             School.self,
             Paper.self,
             FlaggedQuestion.self,
+            FlaggedQuestionAttempt.self,
             THSCImportRecord.self
         ])
         let container = try ModelContainer(

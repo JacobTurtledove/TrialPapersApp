@@ -12,7 +12,12 @@ struct RevisionBookletsView: View {
 
     @State var selectedSubjectID: UUID?
     @State var categoryFilter: BookletCategoryFilter = .both
-    @State var completionFilter: BookletCompletionFilter = .incomplete
+    @State var completionFilter: BookletCompletionFilter = .active
+    @State var priorityFilter: BookletPriorityFilter = .all
+    @State var dueFilter: BookletDueFilter = .all
+    @State var answerPlacement: RevisionBookletAnswerPlacement = .afterEachQuestion
+    @State var includeWorkingPages = false
+    @State var workingPageCount = 1
     @State private var exportMessage: String?
     @State private var exportedBookletURL: URL?
     @State var isExporting = false
@@ -53,11 +58,37 @@ struct RevisionBookletsView: View {
             }
 
             switch completionFilter {
-            case .both:
+            case .all:
                 break
-            case .completed where !question.isCompleted:
+            case .active where question.studyStatus != .active:
                 return false
-            case .incomplete where question.isCompleted:
+            case .needsReview where question.studyStatus != .needsReview:
+                return false
+            case .mastered where question.studyStatus != .mastered:
+                return false
+            default:
+                break
+            }
+
+            switch priorityFilter {
+            case .all:
+                break
+            case .high where question.priority != .high:
+                return false
+            case .normal where question.priority != .normal:
+                return false
+            case .low where question.priority != .low:
+                return false
+            default:
+                break
+            }
+
+            switch dueFilter {
+            case .all:
+                break
+            case .dueNow where question.nextReviewAt.map({ $0 <= Date() }) != true:
+                return false
+            case .noDueDate where question.nextReviewAt != nil:
                 return false
             default:
                 break
@@ -161,6 +192,10 @@ struct RevisionBookletsView: View {
                     year: question.year,
                     questionNumber: question.questionNumber,
                     category: question.category,
+                    status: question.studyStatus,
+                    priority: question.priority,
+                    topic: question.topic,
+                    marksAvailable: question.marksAvailable,
                     questionImageURL: rootURL.appending(
                         path: question.questionImageRelativePath
                     ),
@@ -172,6 +207,8 @@ struct RevisionBookletsView: View {
             try RevisionBookletService().export(
                 subjectName: selectedSubject.displayName,
                 entries: entries,
+                answerPlacement: answerPlacement,
+                workingPageCount: includeWorkingPages ? max(1, workingPageCount) : 0,
                 to: destinationURL
             )
             exportedBookletURL = destinationURL

@@ -21,6 +21,13 @@ struct PaperViewerScreen: View {
     @State var questionNumber = ""
     @State var category: QuestionCategory = .mistake
     @State var includeSolution = true
+    @State var studyStatus: FlaggedQuestionStudyStatus = .active
+    @State var priority: FlaggedQuestionPriority = .normal
+    @State var marksText = ""
+    @State var topicText = ""
+    @State var studyNotesText = ""
+    @State var nextReviewEnabled = false
+    @State var nextReviewDate = Date()
     @State var isSavingQuestion = false
     @State private var captureError: String?
     @State var paperUpdateError: String?
@@ -393,6 +400,13 @@ struct PaperViewerScreen: View {
 
         questionNumber = ""
         category = .mistake
+        studyStatus = .active
+        priority = .normal
+        marksText = ""
+        topicText = ""
+        studyNotesText = ""
+        nextReviewEnabled = false
+        nextReviewDate = Date()
         includeSolution = paper.hasSolutions != false && paper.solutionsStartPage != nil
         captureError = nil
         isFlaggingQuestion = true
@@ -424,6 +438,11 @@ struct PaperViewerScreen: View {
         let trimmedNumber = questionNumber.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedNumber.isEmpty else {
             captureError = "Enter a question number."
+            return
+        }
+        if !marksText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           parsedMarks == nil {
+            captureError = "Marks must be a whole number."
             return
         }
         guard questionController.captureRange() != nil else {
@@ -498,7 +517,13 @@ struct PaperViewerScreen: View {
                     solutionDocument: solutionDocument,
                     solutionRange: solutionRange,
                     questionNumber: questionNumber,
-                    category: category
+                    category: category,
+                    studyStatus: studyStatus,
+                    priority: priority,
+                    marksAvailable: parsedMarks,
+                    topic: topicText,
+                    studyNotes: studyNotesText,
+                    nextReviewAt: nextReviewEnabled ? nextReviewDate : nil
                 ),
                 modelContext: modelContext
             )
@@ -507,6 +532,13 @@ struct PaperViewerScreen: View {
             captureError = error.localizedDescription
             isSavingQuestion = false
         }
+    }
+
+    private var parsedMarks: Int? {
+        let trimmed = marksText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        guard let value = Int(trimmed), value >= 0 else { return nil }
+        return value
     }
 
     func exportPaper() {

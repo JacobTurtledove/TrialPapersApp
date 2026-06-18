@@ -9,9 +9,10 @@ enum CategoryFilter: String, CaseIterable, Identifiable {
 }
 
 enum CompletionFilter: String, CaseIterable, Identifiable {
-    case incomplete = "Incomplete"
-    case completed = "Completed"
-    case both = "Both"
+    case active = "Active"
+    case needsReview = "Needs Review"
+    case mastered = "Mastered"
+    case all = "All Statuses"
 
     var id: String { rawValue }
 }

@@ -5,6 +5,8 @@ struct SubjectFlaggedQuestionsView: View {
     @EnvironmentObject private var appState: AppState
     @Query(sort: \FlaggedQuestion.createdAt, order: .reverse)
     private var questions: [FlaggedQuestion]
+    @Query(sort: \FlaggedQuestionAttempt.attemptedAt, order: .reverse)
+    private var attempts: [FlaggedQuestionAttempt]
     @Query(sort: \School.displayName) private var schools: [School]
     @Query private var papers: [Paper]
 
@@ -12,7 +14,7 @@ struct SubjectFlaggedQuestionsView: View {
 
     @State private var searchText = ""
     @State private var categoryFilter: CategoryFilter = .all
-    @State private var completionFilter: CompletionFilter = .incomplete
+    @State private var completionFilter: CompletionFilter = .active
     @State private var exportMessage: String?
     @State private var exportedURL: URL?
 
@@ -40,11 +42,13 @@ struct SubjectFlaggedQuestionsView: View {
                 break
             }
             switch completionFilter {
-            case .both:
+            case .all:
                 break
-            case .completed where !question.isCompleted:
+            case .active where question.studyStatus != .active:
                 return false
-            case .incomplete where question.isCompleted:
+            case .needsReview where question.studyStatus != .needsReview:
+                return false
+            case .mastered where question.studyStatus != .mastered:
                 return false
             default:
                 break
@@ -56,7 +60,9 @@ struct SubjectFlaggedQuestionsView: View {
             return [
                 schoolName,
                 question.year,
-                question.questionNumber
+                question.questionNumber,
+                question.topic ?? "",
+                question.studyNotes ?? ""
             ].contains {
                 $0.localizedCaseInsensitiveContains(query)
             }
@@ -88,7 +94,8 @@ struct SubjectFlaggedQuestionsView: View {
                         FlaggedQuestionRow(
                             question: question,
                             subject: subject,
-                            school: school(for: question)
+                            school: school(for: question),
+                            attemptCount: attempts.filter { $0.questionID == question.id }.count
                         )
                     }
                     .contextMenu {

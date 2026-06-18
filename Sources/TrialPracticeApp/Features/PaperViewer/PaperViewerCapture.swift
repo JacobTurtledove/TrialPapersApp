@@ -24,6 +24,41 @@ extension PaperViewerScreen {
             }
 
             HStack(spacing: 12) {
+                Picker("Status", selection: $studyStatus) {
+                    ForEach(FlaggedQuestionStudyStatus.allCases) {
+                        Text($0.rawValue).tag($0)
+                    }
+                }
+                .frame(width: 150)
+
+                Picker("Priority", selection: $priority) {
+                    ForEach(FlaggedQuestionPriority.allCases) {
+                        Text($0.rawValue).tag($0)
+                    }
+                }
+                .frame(width: 130)
+
+                TextField("Marks", text: $marksText)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 70)
+
+                TextField("Topic", text: $topicText)
+                    .textFieldStyle(.roundedBorder)
+
+                Toggle("Due", isOn: $nextReviewEnabled)
+                DatePicker(
+                    "Review date",
+                    selection: $nextReviewDate,
+                    displayedComponents: .date
+                )
+                .labelsHidden()
+                .disabled(!nextReviewEnabled)
+            }
+
+            TextField("Study notes", text: $studyNotesText)
+                .textFieldStyle(.roundedBorder)
+
+            HStack(spacing: 12) {
                 Toggle("Include solution capture", isOn: $includeSolution)
                     .disabled(solutionURL == nil)
                     .onChange(of: includeSolution) {

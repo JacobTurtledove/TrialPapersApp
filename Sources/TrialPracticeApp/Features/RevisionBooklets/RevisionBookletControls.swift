@@ -25,6 +25,39 @@ extension RevisionBookletsView {
                 }
                 .frame(maxWidth: 170)
 
+                Picker("Priority", selection: $priorityFilter) {
+                    ForEach(BookletPriorityFilter.allCases) {
+                        Text($0.rawValue).tag($0)
+                    }
+                }
+                .frame(maxWidth: 160)
+
+                Picker("Due", selection: $dueFilter) {
+                    ForEach(BookletDueFilter.allCases) {
+                        Text($0.rawValue).tag($0)
+                    }
+                }
+                .frame(maxWidth: 150)
+
+                Spacer()
+            }
+
+            HStack(spacing: 12) {
+                Picker("Answers", selection: $answerPlacement) {
+                    ForEach(RevisionBookletAnswerPlacement.allCases) {
+                        Text($0.rawValue).tag($0)
+                    }
+                }
+                .frame(maxWidth: 220)
+
+                Toggle("Working pages", isOn: $includeWorkingPages)
+                Stepper(
+                    "\(workingPageCount) page\(workingPageCount == 1 ? "" : "s")",
+                    value: $workingPageCount,
+                    in: 1...5
+                )
+                .disabled(!includeWorkingPages)
+
                 Spacer()
             }
 

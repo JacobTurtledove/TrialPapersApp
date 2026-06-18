@@ -6,6 +6,10 @@ struct RevisionBookletEntry {
     let year: String
     let questionNumber: String
     let category: QuestionCategory
+    var status: FlaggedQuestionStudyStatus = .active
+    var priority: FlaggedQuestionPriority = .normal
+    var topic: String?
+    var marksAvailable: Int?
     let questionImageURL: URL
     let solutionImageURL: URL?
 }
@@ -34,6 +38,8 @@ struct RevisionBookletService {
     func export(
         subjectName: String,
         entries: [RevisionBookletEntry],
+        answerPlacement: RevisionBookletAnswerPlacement = .afterEachQuestion,
+        workingPageCount: Int = 0,
         generatedAt: Date = .now,
         to destinationURL: URL
     ) throws {
@@ -58,30 +64,38 @@ struct RevisionBookletService {
         )
 
         for entry in entries {
-            guard let questionImage = NSImage(contentsOf: entry.questionImageURL) else {
-                throw ExportError.missingQuestionImage(entry.questionNumber)
-            }
-            drawImagePage(
-                title: "Question \(entry.questionNumber)",
-                subtitle: "\(subjectName) · \(entry.schoolName) · \(entry.year)",
-                image: questionImage,
+            try drawQuestionPage(
+                entry: entry,
+                subjectName: subjectName,
                 in: context,
                 mediaBox: mediaBox
             )
-
-            if
-                let solutionImageURL = entry.solutionImageURL,
-                let solutionImage = NSImage(contentsOf: solutionImageURL)
-            {
-                drawImagePage(
-                    title: "Solution · Question \(entry.questionNumber)",
-                    subtitle: "\(subjectName) · \(entry.schoolName) · \(entry.year)",
-                    image: solutionImage,
+            let safeWorkingPageCount = max(0, workingPageCount)
+            if safeWorkingPageCount > 0 {
+                for index in 1...safeWorkingPageCount {
+                    drawWorkingPage(
+                        entry: entry,
+                        subjectName: subjectName,
+                        pageNumber: index,
+                        totalPages: safeWorkingPageCount,
+                        in: context,
+                        mediaBox: mediaBox
+                    )
+                }
+            }
+            if answerPlacement == .afterEachQuestion {
+                drawSolutionPage(
+                    entry: entry,
+                    subjectName: subjectName,
                     in: context,
                     mediaBox: mediaBox
                 )
-            } else {
-                drawMissingSolutionPage(
+            }
+        }
+
+        if answerPlacement == .answersAtEnd {
+            for entry in entries {
+                drawSolutionPage(
                     entry: entry,
                     subjectName: subjectName,
                     in: context,
@@ -91,6 +105,51 @@ struct RevisionBookletService {
         }
 
         context.closePDF()
+    }
+
+    private func drawQuestionPage(
+        entry: RevisionBookletEntry,
+        subjectName: String,
+        in context: CGContext,
+        mediaBox: CGRect
+    ) throws {
+        guard let questionImage = NSImage(contentsOf: entry.questionImageURL) else {
+            throw ExportError.missingQuestionImage(entry.questionNumber)
+        }
+        drawImagePage(
+            title: "Question \(entry.questionNumber)",
+            subtitle: questionSubtitle(entry: entry, subjectName: subjectName),
+            image: questionImage,
+            in: context,
+            mediaBox: mediaBox
+        )
+    }
+
+    private func drawSolutionPage(
+        entry: RevisionBookletEntry,
+        subjectName: String,
+        in context: CGContext,
+        mediaBox: CGRect
+    ) {
+        if
+            let solutionImageURL = entry.solutionImageURL,
+            let solutionImage = NSImage(contentsOf: solutionImageURL)
+        {
+            drawImagePage(
+                title: "Solution · Question \(entry.questionNumber)",
+                subtitle: questionSubtitle(entry: entry, subjectName: subjectName),
+                image: solutionImage,
+                in: context,
+                mediaBox: mediaBox
+            )
+        } else {
+            drawMissingSolutionPage(
+                entry: entry,
+                subjectName: subjectName,
+                in: context,
+                mediaBox: mediaBox
+            )
+        }
     }
 
     private func drawTitlePage(
@@ -128,12 +187,14 @@ struct RevisionBookletService {
 
             let mistakes = entries.filter { $0.category == .mistake }.count
             let unlearned = entries.count - mistakes
+            let mastered = entries.filter { $0.status == .mastered }.count
             let date = generatedAt.formatted(date: .long, time: .omitted)
             let summary = [
                 "Date Generated: \(date)",
                 "Total Questions: \(entries.count)",
                 "Mistakes: \(mistakes)",
-                "Unlearned Content: \(unlearned)"
+                "Unlearned Content: \(unlearned)",
+                "Mastered: \(mastered)"
             ]
 
             for (index, line) in summary.enumerated() {
@@ -184,7 +245,7 @@ struct RevisionBookletService {
         withGraphicsContext(context) {
             drawPageHeader(
                 title: "Solution · Question \(entry.questionNumber)",
-                subtitle: "\(subjectName) · \(entry.schoolName) · \(entry.year)",
+                subtitle: questionSubtitle(entry: entry, subjectName: subjectName),
                 mediaBox: mediaBox
             )
             let attributes: [NSAttributedString.Key: Any] = [
@@ -206,6 +267,38 @@ struct RevisionBookletService {
         context.endPDFPage()
     }
 
+    private func drawWorkingPage(
+        entry: RevisionBookletEntry,
+        subjectName: String,
+        pageNumber: Int,
+        totalPages: Int,
+        in context: CGContext,
+        mediaBox: CGRect
+    ) {
+        context.beginPDFPage(nil)
+        withGraphicsContext(context) {
+            drawPageHeader(
+                title: "Working · Question \(entry.questionNumber)",
+                subtitle: "\(questionSubtitle(entry: entry, subjectName: subjectName)) · Page \(pageNumber) of \(totalPages)",
+                mediaBox: mediaBox
+            )
+            let lineColor = NSColor.separatorColor.withAlphaComponent(0.5)
+            lineColor.setStroke()
+            let path = NSBezierPath()
+            let startY = mediaBox.height - 140
+            let endY = margin + 20
+            var y = startY
+            while y >= endY {
+                path.move(to: CGPoint(x: margin, y: y))
+                path.line(to: CGPoint(x: mediaBox.width - margin, y: y))
+                y -= 28
+            }
+            path.lineWidth = 0.7
+            path.stroke()
+        }
+        context.endPDFPage()
+    }
+
     private func drawPageHeader(title: String, subtitle: String, mediaBox: CGRect) {
         draw(
             title,
@@ -223,6 +316,23 @@ struct RevisionBookletService {
                 .foregroundColor: NSColor.secondaryLabelColor
             ]
         )
+    }
+
+    private func questionSubtitle(entry: RevisionBookletEntry, subjectName: String) -> String {
+        var parts = [
+            subjectName,
+            entry.schoolName,
+            entry.year,
+            entry.status.rawValue,
+            entry.priority.rawValue
+        ]
+        if let marksAvailable = entry.marksAvailable {
+            parts.append("\(marksAvailable) marks")
+        }
+        if let topic = entry.topic, !topic.isEmpty {
+            parts.append(topic)
+        }
+        return parts.joined(separator: " · ")
     }
 
     private func draw(

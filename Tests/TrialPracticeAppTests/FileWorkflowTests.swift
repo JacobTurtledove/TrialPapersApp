@@ -625,7 +625,13 @@ struct FileWorkflowTests {
             solutionDocument: nil,
             solutionRange: nil,
             questionNumber: " 12a ",
-            category: .unlearnedContent
+            category: .unlearnedContent,
+            studyStatus: .needsReview,
+            priority: .high,
+            marksAvailable: 5,
+            topic: "Calculus",
+            studyNotes: "  revisit bounds  ",
+            nextReviewAt: Date(timeIntervalSince1970: 1_700_000_000)
         )
 
         let question = try FlaggedQuestionSaveService(rootURL: rootURL).save(
@@ -640,6 +646,12 @@ struct FileWorkflowTests {
         #expect(question.year == "2025")
         #expect(question.questionNumber == "12a")
         #expect(question.category == .unlearnedContent)
+        #expect(question.studyStatus == .needsReview)
+        #expect(question.priority == .high)
+        #expect(question.marksAvailable == 5)
+        #expect(question.topic == "Calculus")
+        #expect(question.studyNotes == "revisit bounds")
+        #expect(question.nextReviewAt == Date(timeIntervalSince1970: 1_700_000_000))
         #expect(question.questionImageRelativePath.contains("/Unlearned Content/2025/"))
         #expect(FileManager.default.fileExists(
             atPath: rootURL.appending(path: question.questionImageRelativePath).path
@@ -758,6 +770,56 @@ struct FileWorkflowTests {
         #expect(booklet.pageCount == 5)
         #expect(booklet.page(at: 0)?.string?.contains("Revision Booklet") == true)
         #expect(booklet.page(at: 4)?.string?.contains("No solution provided") == true)
+    }
+
+    @Test
+    func exportsRevisionBookletWithAnswersAtEndAndWorkingPages() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let questionOneURL = rootURL.appending(path: "question-one.png")
+        let solutionOneURL = rootURL.appending(path: "solution-one.png")
+        let questionTwoURL = rootURL.appending(path: "question-two.png")
+        try makePNG(label: "Question 1", at: questionOneURL)
+        try makePNG(label: "Solution 1", at: solutionOneURL)
+        try makePNG(label: "Question 2", at: questionTwoURL)
+
+        let destinationURL = rootURL.appending(path: "booklet-answers-end.pdf")
+        try RevisionBookletService().export(
+            subjectName: "Maths Advanced",
+            entries: [
+                RevisionBookletEntry(
+                    schoolName: "Example School",
+                    year: "2025",
+                    questionNumber: "14a",
+                    category: .mistake,
+                    status: .needsReview,
+                    priority: .high,
+                    topic: "Calculus",
+                    marksAvailable: 5,
+                    questionImageURL: questionOneURL,
+                    solutionImageURL: solutionOneURL
+                ),
+                RevisionBookletEntry(
+                    schoolName: "Other School",
+                    year: "2024",
+                    questionNumber: "7",
+                    category: .unlearnedContent,
+                    questionImageURL: questionTwoURL,
+                    solutionImageURL: nil
+                )
+            ],
+            answerPlacement: .answersAtEnd,
+            workingPageCount: 1,
+            generatedAt: Date(timeIntervalSince1970: 0),
+            to: destinationURL
+        )
+
+        let booklet = try #require(PDFDocument(url: destinationURL))
+        #expect(booklet.pageCount == 7)
+        #expect(booklet.page(at: 2)?.string?.contains("Working") == true)
+        #expect(booklet.page(at: 5)?.string?.contains("Solution") == true)
+        #expect(booklet.page(at: 6)?.string?.contains("No solution provided") == true)
     }
 
     @Test

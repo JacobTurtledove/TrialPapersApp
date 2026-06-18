@@ -23,6 +23,14 @@ struct RevisionBookletQuestionRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+            Text(question.studyStatus.rawValue)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text(question.priority.rawValue)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             Image(
                 systemName: question.solutionImageRelativePath == nil
                     ? "doc.questionmark"

@@ -4,6 +4,7 @@ enum NavigationItem: String, CaseIterable, Identifiable {
     case library = "Library"
     case thscImport = "Import from THSC"
     case nesaPastPapers = "NESA Past Papers"
+    case studyQueue = "Study Queue"
     case flaggedQuestions = "Flagged Questions"
     case booklets = "Revision Booklets"
     case bin = "Bin"
@@ -16,6 +17,7 @@ enum NavigationItem: String, CaseIterable, Identifiable {
         case .library: "folder"
         case .thscImport: "arrow.down.doc"
         case .nesaPastPapers: "doc.text.magnifyingglass"
+        case .studyQueue: "target"
         case .flaggedQuestions: "flag"
         case .booklets: "book.pages"
         case .bin: "trash"
@@ -66,6 +68,8 @@ struct MainNavigationView: View {
                     THSCImportView()
                 case .nesaPastPapers:
                     NESAPastPapersView()
+                case .studyQueue:
+                    StudyQueueView()
                 case .bin:
                     SubjectBinView()
                 case .flaggedQuestions:

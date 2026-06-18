@@ -133,14 +133,38 @@ PDFKit bridge code lives under `Infrastructure/PDF`.
 
 The viewer captures question and optional solution images from selected PDF
 page ranges. Captures are saved as PNGs and recorded as `FlaggedQuestion`
-models. Flagged-question screens support filtering, search, completion,
-export, and soft deletion.
+models. Captures can include study metadata: status, priority, marks, topic,
+notes, and an optional review date. Duplicate subject/school/year/question
+captures warn before saving but can still be saved as duplicates with
+collision-safe filenames.
+
+Flagged-question screens support category/status filtering, search across
+school/year/question/topic/notes, solution-hidden reattempt, attempt history,
+manual metadata updates, export, and soft deletion.
+
+### Study Queue
+
+`StudyQueueView` lists active flagged questions whose subject and paper are
+also active. The default queue includes non-mastered questions and mastered
+questions that are due again. It sorts overdue questions first, then due date,
+priority, and newest capture.
+
+Reattempts use `FlaggedQuestionAttemptService` and
+`FlaggedQuestionStudyScheduler`. Each attempt records outcome, confidence,
+notes, the resulting study status, and the next review date. Scheduling rules:
+wrong attempts are due tomorrow, partial attempts are due in three days,
+correct low-confidence attempts are due in three days, correct medium-confidence
+attempts are due in seven days, and correct high-confidence attempts are marked
+mastered with no review date.
 
 ### Revision Booklets
 
 `RevisionBookletsView` filters active flagged questions and
 `RevisionBookletService` exports a PDF containing a title page, each question,
-and each solution or a "No solution provided" page.
+and each solution or a "No solution provided" page. Booklets can filter by
+category, status, priority, and due state. Export options support answers after
+each question or answers at the end, plus optional lined working pages after
+each question.
 
 ### THSC Import
 
@@ -172,7 +196,7 @@ staged file deletion.
 | `Models/Subject.swift` | SwiftData subject model, folder color hex handling, soft-delete timestamp. |
 | `Models/School.swift` | SwiftData school model, filename value, embedded crest image data, crest metadata. |
 | `Models/Paper.swift` | SwiftData paper model, subject/school IDs, year, paths, solution metadata, completion, soft delete. |
-| `Models/FlaggedQuestion.swift` | SwiftData flagged-question model and `QuestionCategory` enum. |
+| `Models/FlaggedQuestion.swift` | SwiftData flagged-question and attempt models, category/status/priority/outcome/confidence enums. |
 | `Models/THSCImportRecord.swift` | SwiftData record of imported THSC listing identifiers and linked paper IDs. |
 
 Do not change model properties casually. Schema changes can require migrations
@@ -190,6 +214,7 @@ and can break existing local data.
 | `Views/PDFViewerView.swift` | SwiftUI wrapper around PDFKit view/controller integration, including viewport capture/restore. |
 | `Views/THSCImportView.swift` | THSC importer screen state and import selection flow. |
 | `Views/FlaggedQuestionsView.swift` | Flagged-question subject overview. |
+| `Views/StudyQueueView.swift` | Global due/incomplete flagged-question practice queue. |
 | `Views/RevisionBookletsView.swift` | Revision booklet filter/export screen state. |
 | `Views/NESAPastPapersView.swift` | Informational NESA course/past-paper links. |
 | `Views/SubjectBinView.swift` | Bin restore and permanent-delete UI. |
@@ -210,6 +235,7 @@ and can break existing local data.
 | `Services/FinderRevealService.swift` | Safe Finder reveal support for stored relative paths. |
 | `Services/FlaggedQuestionCaptureService.swift` | PDF page-range capture, PNG stitching, image save/delete. |
 | `Services/FlaggedQuestionSaveService.swift` | Captures images, creates `FlaggedQuestion`, rolls back images on save failure. |
+| `Services/FlaggedQuestionStudyService.swift` | Reattempt scheduling, attempt persistence, metadata persistence, and queue filtering/sorting. |
 | `Services/RevisionBookletService.swift` | Revision booklet PDF rendering. |
 | `Services/THSCImportService.swift` | THSC listing parsing, PDF download, source/listing types. |
 | `Services/THSCImportCoordinator.swift` | App-wide THSC import task, progress, school reuse, persistence rollback. |
@@ -278,6 +304,7 @@ and can break existing local data.
 | `Features/FlaggedQuestions/FlaggedQuestionFilters.swift` | Category and completion filter enums. |
 | `Features/FlaggedQuestions/SubjectFlaggedQuestionsView.swift` | Flagged-question list for one subject. |
 | `Features/FlaggedQuestions/FlaggedQuestionDetailView.swift` | Captured question/solution detail screen. |
+| `Features/FlaggedQuestions/FlaggedQuestionPracticeView.swift` | Solution-hidden practice flow and attempt recording. |
 | `Features/FlaggedQuestions/FlaggedQuestionExportFolderPicker.swift` | Folder picker for flagged-question export. |
 | `Features/FlaggedQuestions/Components/FlaggedSubjectFolderCard.swift` | Subject card in flagged-question overview. |
 | `Features/FlaggedQuestions/Components/FlaggedQuestionRow.swift` | Row UI for a flagged question. |
@@ -397,6 +424,7 @@ PDF viewing spans SwiftUI, PDFKit, and AppKit. Keep bridge code in
 - full-width captures;
 - multi-page stitching;
 - question and solution capture independence;
+- study metadata persistence;
 - rollback of saved images if SwiftData persistence fails.
 
 ### Changing Deletion

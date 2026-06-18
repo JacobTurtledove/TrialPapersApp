@@ -191,6 +191,9 @@ struct SettingsView: View {
         let importRecords = try modelContext.fetch(FetchDescriptor<THSCImportRecord>())
         importRecords.forEach(modelContext.delete)
 
+        let attempts = try modelContext.fetch(FetchDescriptor<FlaggedQuestionAttempt>())
+        attempts.forEach(modelContext.delete)
+
         let flaggedQuestions = try modelContext.fetch(FetchDescriptor<FlaggedQuestion>())
         flaggedQuestions.forEach(modelContext.delete)
 

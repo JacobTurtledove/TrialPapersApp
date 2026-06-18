@@ -5,7 +5,7 @@ struct FlaggedSubjectFolderCard: View {
     let questions: [FlaggedQuestion]
 
     private var incompleteCount: Int {
-        questions.filter { !$0.isCompleted }.count
+        questions.filter { $0.studyStatus != .mastered }.count
     }
 
     var body: some View {

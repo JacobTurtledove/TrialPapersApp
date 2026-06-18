@@ -8,6 +8,7 @@ struct SubjectBinView: View {
     @Query(sort: \School.displayName) private var schools: [School]
     @Query(sort: \Paper.year, order: .reverse) private var papers: [Paper]
     @Query(sort: \FlaggedQuestion.createdAt, order: .reverse) private var questions: [FlaggedQuestion]
+    @Query private var attempts: [FlaggedQuestionAttempt]
     @Query private var importRecords: [THSCImportRecord]
 
     @State private var subjectToDelete: Subject?
@@ -236,6 +237,7 @@ struct SubjectBinView: View {
                 subject,
                 papers: papers,
                 flaggedQuestions: questions,
+                attempts: attempts,
                 importRecords: importRecords
             )
             subjectToDelete = nil
@@ -249,6 +251,7 @@ struct SubjectBinView: View {
             try binDeletionService.permanentlyDelete(
                 paper,
                 flaggedQuestions: questions,
+                attempts: attempts,
                 importRecords: importRecords
             )
             paperToDelete = nil
@@ -259,7 +262,7 @@ struct SubjectBinView: View {
 
     private func permanentlyDelete(_ question: FlaggedQuestion) {
         do {
-            try binDeletionService.permanentlyDelete(question)
+            try binDeletionService.permanentlyDelete(question, attempts: attempts)
             questionToDelete = nil
         } catch {
             errorMessage = error.localizedDescription
