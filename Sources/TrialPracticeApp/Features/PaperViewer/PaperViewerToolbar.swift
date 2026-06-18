@@ -49,7 +49,7 @@ extension PaperViewerScreen {
             .help("Capture a question for revision")
 
             Button {
-                performOnVisibleControllers { $0.fitWidth() }
+                fitVisibleDocumentsToViewer()
             } label: {
                 Label("Fit Width", systemImage: "arrow.left.and.right")
             }

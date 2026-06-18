@@ -6,6 +6,7 @@ import SwiftUI
 struct PaperViewerScreen: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var navigationCoordinator: AppNavigationCoordinator
     @EnvironmentObject private var annotationSaveCoordinator: PDFAnnotationSaveCoordinator
     @EnvironmentObject private var pdfViewportStore: PDFViewerViewportStore
     @Environment(\.modelContext) private var modelContext
@@ -30,6 +31,7 @@ struct PaperViewerScreen: View {
     @State private var showSolutionsStartPicker = false
     @State private var selectedSolutionsStartPage = 1
     @State var selectedDrawingTool: PDFDrawingTool = .none
+    @State var splitDividerResetToken = 0
     @AppStorage("pdfViewer.pen1.colorHex") var pen1ColorHex = "#000000"
     @AppStorage("pdfViewer.pen1.lineWidth") var pen1LineWidth = 4.0
     @AppStorage("pdfViewer.pen2.colorHex") var pen2ColorHex = "#D92D20"
@@ -90,6 +92,7 @@ struct PaperViewerScreen: View {
         }
         .navigationTitle(viewerTitle)
         .onAppear {
+            navigationCoordinator.focusDetailColumn()
             if paper.hasSolutions != false, paper.solutionsStartPage == nil {
                 viewingMode = .questions
                 presentSolutionsStartPicker()
@@ -110,6 +113,7 @@ struct PaperViewerScreen: View {
             scheduleAnnotationSessionLoad()
         }
         .onDisappear {
+            navigationCoordinator.restoreAutomaticSplitViewVisibility()
             pendingAnnotationLoadTask?.cancel()
             queuePendingAnnotationSave()
             pdfViewportStore.flushPendingPersistence()
@@ -277,6 +281,13 @@ struct PaperViewerScreen: View {
         case .both:
             action(questionController)
             action(solutionController)
+        }
+    }
+
+    func fitVisibleDocumentsToViewer() {
+        performOnVisibleControllers { $0.fitWidth() }
+        if viewingMode == .both {
+            splitDividerResetToken += 1
         }
     }
 

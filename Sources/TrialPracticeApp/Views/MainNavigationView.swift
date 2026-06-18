@@ -27,9 +27,18 @@ enum NavigationItem: String, CaseIterable, Identifiable {
 @MainActor
 final class AppNavigationCoordinator: ObservableObject {
     @Published var selection: NavigationItem? = .library
+    @Published var splitViewVisibility: NavigationSplitViewVisibility = .automatic
 
     func showTHSCImport() {
         selection = .thscImport
+    }
+
+    func focusDetailColumn() {
+        splitViewVisibility = .detailOnly
+    }
+
+    func restoreAutomaticSplitViewVisibility() {
+        splitViewVisibility = .automatic
     }
 }
 
@@ -41,7 +50,7 @@ struct MainNavigationView: View {
     @StateObject private var annotationSaveCoordinator = PDFAnnotationSaveCoordinator()
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $navigationCoordinator.splitViewVisibility) {
             List(NavigationItem.allCases, selection: $navigationCoordinator.selection) { item in
                 Label(item.rawValue, systemImage: item.icon)
                     .tag(item)
@@ -70,6 +79,7 @@ struct MainNavigationView: View {
         }
         .onChange(of: navigationCoordinator.selection) {
             detailPath = NavigationPath()
+            navigationCoordinator.restoreAutomaticSplitViewVisibility()
         }
         .environmentObject(navigationCoordinator)
         .environmentObject(thscImportCoordinator)

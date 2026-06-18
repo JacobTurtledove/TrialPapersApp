@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 extension PaperViewerScreen {
@@ -21,7 +22,7 @@ extension PaperViewerScreen {
                 label: "solutions paper"
             )
         case .both:
-            HSplitView {
+            CenteredDividerHSplitView(resetToken: splitDividerResetToken) {
                 labeledDocumentView(
                     title: "Questions",
                     url: questionURL,
@@ -30,6 +31,7 @@ extension PaperViewerScreen {
                     viewportRole: .questions,
                     label: "question paper"
                 )
+            } trailing: {
                 labeledDocumentView(
                     title: "Solutions",
                     url: solutionURL,
@@ -121,6 +123,80 @@ extension PaperViewerScreen {
                     "The \(label) has been moved or deleted. Restore it in the app data folder."
                 )
             )
+        }
+    }
+}
+
+private struct CenteredDividerHSplitView<Leading: View, Trailing: View>: NSViewRepresentable {
+    let resetToken: Int
+    let leading: Leading
+    let trailing: Trailing
+
+    init(
+        resetToken: Int,
+        @ViewBuilder leading: () -> Leading,
+        @ViewBuilder trailing: () -> Trailing
+    ) {
+        self.resetToken = resetToken
+        self.leading = leading()
+        self.trailing = trailing()
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(resetToken: resetToken)
+    }
+
+    func makeNSView(context: Context) -> NSSplitView {
+        let splitView = NSSplitView()
+        splitView.isVertical = true
+        splitView.dividerStyle = .thin
+
+        let leadingHost = NSHostingView(rootView: leading)
+        let trailingHost = NSHostingView(rootView: trailing)
+        leadingHost.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        trailingHost.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        leadingHost.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        trailingHost.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        splitView.addArrangedSubview(leadingHost)
+        splitView.addArrangedSubview(trailingHost)
+        context.coordinator.leadingHost = leadingHost
+        context.coordinator.trailingHost = trailingHost
+
+        DispatchQueue.main.async {
+            context.coordinator.centerDivider(in: splitView)
+        }
+
+        return splitView
+    }
+
+    func updateNSView(_ splitView: NSSplitView, context: Context) {
+        context.coordinator.leadingHost?.rootView = leading
+        context.coordinator.trailingHost?.rootView = trailing
+
+        guard context.coordinator.lastResetToken != resetToken else { return }
+        context.coordinator.lastResetToken = resetToken
+        DispatchQueue.main.async {
+            context.coordinator.centerDivider(in: splitView)
+        }
+    }
+
+    @MainActor
+    final class Coordinator {
+        var lastResetToken: Int
+        var leadingHost: NSHostingView<Leading>?
+        var trailingHost: NSHostingView<Trailing>?
+
+        init(resetToken: Int) {
+            lastResetToken = resetToken
+        }
+
+        func centerDivider(in splitView: NSSplitView) {
+            splitView.layoutSubtreeIfNeeded()
+            guard splitView.arrangedSubviews.count == 2 else { return }
+            let availableWidth = splitView.bounds.width - splitView.dividerThickness
+            guard availableWidth > 0 else { return }
+            splitView.setPosition(availableWidth / 2, ofDividerAt: 0)
         }
     }
 }

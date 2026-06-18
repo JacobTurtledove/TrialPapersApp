@@ -345,7 +345,7 @@ The viewer provides:
 - continuous vertical PDF scrolling;
 - zoom in;
 - zoom out;
-- fit width;
+- fit width, including recentering the divider in Both mode;
 - persisted pen annotations;
 - stroke erasing for PDF ink annotations;
 - paper completion checkbox;

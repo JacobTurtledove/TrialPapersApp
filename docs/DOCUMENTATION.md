@@ -118,6 +118,8 @@ annotation save before continuing.
 The viewer persists the user's last visible PDF position separately for the
 questions and solutions panes, so switching between Questions, Solutions, and
 Both views or reopening the app restores the last viewed location for each side.
+The Fit Width toolbar action rescales the visible PDF panes, and in Both view it
+also recenters the question/solution divider.
 Viewport positions are app settings stored in `UserDefaults` under
 `pdfViewer.viewportPositions.v1`; they are not SwiftData model state and do not
 require a database migration. Changing the first solutions page clears the saved
