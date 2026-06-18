@@ -21,6 +21,7 @@ struct PDFViewerView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> SelectablePDFView {
         let pdfView = SelectablePDFView()
+        context.coordinator.isActive = true
         pdfView.displayMode = .singlePageContinuous
         pdfView.displayDirection = .vertical
         pdfView.displaysPageBreaks = true
@@ -48,6 +49,7 @@ struct PDFViewerView: NSViewRepresentable {
     }
 
     func updateNSView(_ pdfView: SelectablePDFView, context: Context) {
+        context.coordinator.isActive = true
         controller.attach(pdfView)
         pdfView.sourceURL = url
         pdfView.sourceDocument = sourceDocument
@@ -70,7 +72,8 @@ struct PDFViewerView: NSViewRepresentable {
     }
 
     static func dismantleNSView(_ pdfView: SelectablePDFView, coordinator: Coordinator) {
-        coordinator.flushPendingViewportSave()
+        coordinator.isActive = false
+        coordinator.cancelPendingViewportSave()
         coordinator.stopObserving()
         coordinator.onViewportChanged = nil
     }
@@ -90,6 +93,7 @@ struct PDFViewerView: NSViewRepresentable {
         context.coordinator.loadedSelection = selection
         context.coordinator.loadedSourceDocument = sourceDocument
         DispatchQueue.main.async {
+            guard context.coordinator.isActive else { return }
             controller.attach(pdfView)
             context.coordinator.startObserving(pdfView)
             context.coordinator.restoreViewportIfNeeded(in: pdfView)
@@ -101,15 +105,16 @@ struct PDFViewerView: NSViewRepresentable {
         var loadedURL: URL?
         var loadedSelection: PDFPageSelection?
         weak var loadedSourceDocument: PDFDocument?
+        var isActive = true
         var viewportPosition: PDFViewportPosition?
         var onViewportChanged: ((PDFViewportPosition) -> Void)?
         private var observedClipView: NSClipView?
         private var observerTokens: [NSObjectProtocol] = []
         private var pendingViewportSave: DispatchWorkItem?
-        private var pendingViewportPosition: PDFViewportPosition?
         private var isRestoringViewport = false
 
         func startObserving(_ pdfView: PDFView) {
+            guard isActive else { return }
             let clipView = pdfView.documentView?.enclosingScrollView?.contentView
             guard observedClipView !== clipView else { return }
 
@@ -142,7 +147,8 @@ struct PDFViewerView: NSViewRepresentable {
         }
 
         func restoreViewportIfNeeded(in pdfView: PDFView) {
-            guard let viewportPosition,
+            guard isActive,
+                  let viewportPosition,
                   let document = pdfView.document,
                   document.pageCount > 0
             else { return }
@@ -171,33 +177,30 @@ struct PDFViewerView: NSViewRepresentable {
         func captureViewport(from pdfView: PDFView) {
             pendingViewportSave?.cancel()
             pendingViewportSave = nil
-            guard !isRestoringViewport,
+            guard isActive,
+                  !isRestoringViewport,
                   let position = currentPosition(in: pdfView)
             else { return }
-            pendingViewportPosition = nil
             onViewportChanged?(position)
         }
 
         private func scheduleViewportSave(from pdfView: PDFView) {
-            guard !isRestoringViewport,
-                  let position = currentPosition(in: pdfView)
+            guard isActive,
+                  observedClipView != nil,
+                  !isRestoringViewport
             else { return }
-            pendingViewportPosition = position
             pendingViewportSave?.cancel()
             let workItem = DispatchWorkItem { [weak self, weak pdfView] in
-                guard pdfView != nil else { return }
-                self?.flushPendingViewportSave()
+                guard let pdfView else { return }
+                self?.captureViewport(from: pdfView)
             }
             pendingViewportSave = workItem
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: workItem)
         }
 
-        func flushPendingViewportSave() {
+        func cancelPendingViewportSave() {
             pendingViewportSave?.cancel()
             pendingViewportSave = nil
-            guard let position = pendingViewportPosition else { return }
-            pendingViewportPosition = nil
-            onViewportChanged?(position)
         }
 
         private func currentPosition(in pdfView: PDFView) -> PDFViewportPosition? {

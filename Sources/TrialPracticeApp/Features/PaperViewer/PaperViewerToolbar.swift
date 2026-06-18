@@ -38,7 +38,7 @@ extension PaperViewerScreen {
             Button {
                 beginFlagging()
             } label: {
-                Label("Flag Question", systemImage: "flag.badge.plus")
+                Label("Flag Question", systemImage: "flag")
             }
             .disabled(
                 isFlaggingQuestion ||

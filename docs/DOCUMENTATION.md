@@ -114,6 +114,9 @@ Viewport positions are app settings stored in `UserDefaults` under
 `pdfViewer.viewportPositions.v1`; they are not SwiftData model state and do not
 require a database migration. Changing the first solutions page clears the saved
 viewport positions for that paper because the displayed page mapping changes.
+Question/solution subset documents are built with copied `PDFPage` instances for
+display, avoiding shared PDFKit page ownership across the Questions and
+Solutions panes while preserving annotation writes through the source document.
 PDFKit bridge code lives under `Infrastructure/PDF`.
 
 ### Flagged Questions
@@ -219,7 +222,7 @@ and can break existing local data.
 | `Infrastructure/PDF/PDFInkOverlayView.swift` | AppKit overlay view for collecting/rendering ink strokes. |
 | `Infrastructure/PDF/PDFInkGeometry.swift` | Coordinate conversion helpers for PDF ink geometry. |
 | `Infrastructure/PDF/PDFCaptureOverlayView.swift` | Draggable PDF capture boundary overlay. |
-| `Infrastructure/PDF/PDFDocumentLoader.swift` | PDF document loading and derived page subsets. |
+| `Infrastructure/PDF/PDFDocumentLoader.swift` | PDF document loading and copied derived page subsets for safe multi-pane display. |
 | `Infrastructure/PDF/PDFPageSelection.swift` | Page selection value type for page-subset display. |
 | `Infrastructure/PDF/PDFPagePreviewView.swift` | SwiftUI/AppKit page preview bridge. |
 | `Infrastructure/PDF/NSColor+Hex.swift` | Hex color conversion for AppKit colors. |

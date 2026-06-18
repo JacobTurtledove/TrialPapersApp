@@ -18,8 +18,13 @@ func loadPDFDocument(from source: PDFDocument, selection: PDFPageSelection) -> P
     guard !range.isEmpty else { return nil }
     let result = PDFDocument()
     for index in range {
-        guard let page = source.page(at: index) else { return nil }
-        result.insert(page, at: result.pageCount)
+        guard
+            let page = source.page(at: index),
+            let copiedPage = page.copy() as? PDFPage
+        else {
+            return nil
+        }
+        result.insert(copiedPage, at: result.pageCount)
     }
     return result
 }

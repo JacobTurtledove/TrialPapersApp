@@ -241,6 +241,31 @@ struct FileWorkflowTests {
     }
 
     @Test
+    func pdfPageSubsetLoaderCopiesPagesFromSourceDocument() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let pdfURL = rootURL.appending(path: "combined.pdf")
+        try makePDF(pageCount: 5, at: pdfURL)
+        let sourceDocument = try #require(PDFDocument(url: pdfURL))
+
+        let questionDocument = try #require(loadPDFDocument(
+            from: sourceDocument,
+            selection: .questions(before: 4)
+        ))
+        let solutionDocument = try #require(loadPDFDocument(
+            from: sourceDocument,
+            selection: .solutions(from: 4)
+        ))
+
+        #expect(sourceDocument.pageCount == 5)
+        #expect(questionDocument.pageCount == 3)
+        #expect(solutionDocument.pageCount == 2)
+        #expect(questionDocument.page(at: 0) !== sourceDocument.page(at: 0))
+        #expect(solutionDocument.page(at: 0) !== sourceDocument.page(at: 3))
+    }
+
+    @Test
     func preparesAndRenamesSubjectFolders() throws {
         let rootURL = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: rootURL) }
