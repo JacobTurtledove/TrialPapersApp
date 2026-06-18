@@ -38,6 +38,7 @@ struct MainNavigationView: View {
     @StateObject private var navigationCoordinator = AppNavigationCoordinator()
     @StateObject private var thscImportCoordinator = THSCImportCoordinator()
     @StateObject private var pdfViewportStore = PDFViewerViewportStore()
+    @StateObject private var annotationSaveCoordinator = PDFAnnotationSaveCoordinator()
 
     var body: some View {
         NavigationSplitView {
@@ -73,10 +74,27 @@ struct MainNavigationView: View {
         .environmentObject(navigationCoordinator)
         .environmentObject(thscImportCoordinator)
         .environmentObject(pdfViewportStore)
+        .environmentObject(annotationSaveCoordinator)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if thscImportCoordinator.isImporting {
                 THSCImportProgressBar(coordinator: thscImportCoordinator)
             }
+        }
+        .alert(
+            "Could Not Save PDF Annotations",
+            isPresented: Binding(
+                get: { annotationSaveCoordinator.saveFailure != nil },
+                set: { if !$0 { annotationSaveCoordinator.clearFailure() } }
+            )
+        ) {
+            Button("Retry") {
+                annotationSaveCoordinator.retryFailedSave()
+            }
+            Button("OK", role: .cancel) {
+                annotationSaveCoordinator.clearFailure()
+            }
+        } message: {
+            Text(annotationSaveCoordinator.saveFailure?.message ?? "")
         }
         .background(WindowTitleSetter(title: AppBuild.windowTitle))
     }

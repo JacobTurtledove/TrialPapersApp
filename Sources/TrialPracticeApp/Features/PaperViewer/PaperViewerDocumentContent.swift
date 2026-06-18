@@ -78,24 +78,41 @@ extension PaperViewerScreen {
     ) -> some View {
         if let url {
             let annotationSession = annotationSession(for: url)
-            PDFViewerView(
-                url: url,
-                sourceDocument: annotationSession?.document,
-                selection: selection,
-                viewportPosition: viewportPosition(for: viewportRole),
-                drawingTool: activeDrawingTool,
-                penConfigurations: penConfigurations,
-                onViewportChanged: { position in
-                    saveViewportPosition(position, for: viewportRole)
-                },
-                onAnnotationsChanged: {
-                    annotationSession?.markDirty()
-                },
-                onAnnotationError: { message in
-                    paperUpdateError = message
-                },
-                controller: controller
-            )
+            if let document = annotationSession?.document {
+                PDFViewerView(
+                    url: url,
+                    sourceDocument: document,
+                    selection: selection,
+                    viewportPosition: viewportPosition(for: viewportRole),
+                    drawingTool: activeDrawingTool,
+                    penConfigurations: penConfigurations,
+                    onViewportChanged: { position in
+                        saveViewportPosition(position, for: viewportRole)
+                    },
+                    onAnnotationsChanged: {
+                        annotationSession?.markDirty()
+                        scheduleAnnotationAutosave(for: annotationSession)
+                    },
+                    onAnnotationError: { message in
+                        paperUpdateError = message
+                    },
+                    controller: controller
+                )
+            } else if hasPendingAnnotationSave(for: url) {
+                ProgressView("Saving annotations...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if annotationSession?.didAttemptLoad == true {
+                ContentUnavailableView(
+                    "PDF Not Found",
+                    systemImage: "doc.badge.exclamationmark",
+                    description: Text(
+                        "The \(label) could not be opened. Restore it in the app data folder."
+                    )
+                )
+            } else {
+                ProgressView("Loading PDF...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         } else {
             ContentUnavailableView(
                 "PDF Not Found",

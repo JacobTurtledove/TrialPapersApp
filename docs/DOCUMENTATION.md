@@ -107,6 +107,14 @@ paper path, and rolls back created files if persistence fails.
 annotation tools, export/reveal actions, and flagged-question capture.
 Pen strokes are stored as PDF ink annotations, and the eraser removes whole ink
 strokes from the annotatable PDF document.
+Dirty annotation sessions autosave after a short idle delay. Closing a dirty
+viewer queues any remaining PDF write through the app-wide annotation save
+coordinator and dismisses immediately; save failures are reported from the main
+navigation shell with a retry option. Reopening a PDF with a pending annotation
+write shows an in-view saving state until the file is ready, avoiding a
+simultaneous PDFKit read/write of the same file. Flows that immediately depend
+on the stored PDF, such as flagged-question capture, still force a synchronous
+annotation save before continuing.
 The viewer persists the user's last visible PDF position separately for the
 questions and solutions panes, so switching between Questions, Solutions, and
 Both views or reopening the app restores the last viewed location for each side.
@@ -173,7 +181,7 @@ and can break existing local data.
 | File | Purpose |
 | --- | --- |
 | `Views/RootView.swift` | Hosts navigation and runs storage migrations. |
-| `Views/MainNavigationView.swift` | Sidebar destinations, navigation coordinator, shared environment objects, and the app-wide PDF viewport store. |
+| `Views/MainNavigationView.swift` | Sidebar destinations, navigation coordinator, shared environment objects, app-wide PDF viewport store, and annotation save coordinator alerts. |
 | `Views/LibraryView.swift` | Top-level library screen for subjects and full-library export. |
 | `Views/AddPaperView.swift` | Manual paper import sheet and SwiftData insertion/rollback coordination. |
 | `Views/PaperViewerScreen.swift` | Main PDF viewer workflow, annotation save lifecycle, and per-paper viewport persistence/reset coordination. |
@@ -215,7 +223,7 @@ and can break existing local data.
 | `Infrastructure/Storage/StorageMigrationService.swift` | Versioned storage migrations; currently embeds legacy crest files as model data. |
 | `Infrastructure/PDF/PDFViewerController.swift` | Imperative PDF view control: zoom, fit width, capture overlay, and `UserDefaults`-backed viewport position storage. |
 | `Infrastructure/PDF/SelectablePDFView.swift` | PDFKit view subclass used by the SwiftUI bridge. |
-| `Infrastructure/PDF/PDFAnnotationSession.swift` | Loads/saves annotatable PDF documents and dirty state. |
+| `Infrastructure/PDF/PDFAnnotationSession.swift` | Loads annotatable PDF documents, tracks dirty state, creates deferred save requests, and coordinates queued annotation saves. |
 | `Infrastructure/PDF/PDFAnnotationEditing.swift` | Annotation editing behavior on the selectable PDF view. |
 | `Infrastructure/PDF/PDFDrawingTypes.swift` | Drawing tool, pen configuration, and ink stroke value types. |
 | `Infrastructure/PDF/PDFInkOverlayProvider.swift` | PDFKit page overlay provider for ink drawing. |

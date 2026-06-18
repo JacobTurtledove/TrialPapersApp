@@ -6,6 +6,7 @@ import SwiftUI
 struct PaperViewerScreen: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var annotationSaveCoordinator: PDFAnnotationSaveCoordinator
     @EnvironmentObject private var pdfViewportStore: PDFViewerViewportStore
     @Environment(\.modelContext) private var modelContext
     @Query private var existingQuestions: [FlaggedQuestion]
@@ -37,6 +38,7 @@ struct PaperViewerScreen: View {
     @StateObject var solutionController = PDFViewerController()
     @StateObject private var questionAnnotationSession = PDFAnnotationSession()
     @StateObject private var solutionAnnotationSession = PDFAnnotationSession()
+    @State private var pendingAnnotationLoadTask: Task<Void, Never>?
 
     var questionURL: URL? {
         fileURL(for: paper.primaryPDFRelativePath)
@@ -88,7 +90,6 @@ struct PaperViewerScreen: View {
         }
         .navigationTitle(viewerTitle)
         .onAppear {
-            loadAnnotationSessions()
             if paper.hasSolutions != false, paper.solutionsStartPage == nil {
                 viewingMode = .questions
                 presentSolutionsStartPicker()
@@ -97,20 +98,21 @@ struct PaperViewerScreen: View {
             } else {
                 viewingMode = .questions
             }
+            scheduleAnnotationSessionLoad()
         }
         .onChange(of: questionURL) {
-            loadAnnotationSessions()
+            scheduleAnnotationSessionLoad()
         }
         .onChange(of: solutionURL) {
-            loadAnnotationSessions()
+            scheduleAnnotationSessionLoad()
+        }
+        .onChange(of: annotationSaveCoordinator.pendingSaveURLs) {
+            scheduleAnnotationSessionLoad()
         }
         .onDisappear {
-            do {
-                try savePendingAnnotations()
-                pdfViewportStore.flushPendingPersistence()
-            } catch {
-                paperUpdateError = error.localizedDescription
-            }
+            pendingAnnotationLoadTask?.cancel()
+            queuePendingAnnotationSave()
+            pdfViewportStore.flushPendingPersistence()
         }
         .sheet(isPresented: $showSolutionsStartPicker) {
             if let questionURL, let paperPageCount {
@@ -278,13 +280,36 @@ struct PaperViewerScreen: View {
         }
     }
 
+    private func scheduleAnnotationSessionLoad() {
+        pendingAnnotationLoadTask?.cancel()
+        pendingAnnotationLoadTask = Task { @MainActor in
+            await Task.yield()
+            loadAnnotationSessions()
+        }
+    }
+
     private func loadAnnotationSessions() {
-        questionAnnotationSession.load(url: questionURL)
+        questionAnnotationSession.load(url: loadableURL(
+            questionURL,
+            for: questionAnnotationSession
+        ))
         if solutionURL == questionURL {
             solutionAnnotationSession.load(url: nil)
         } else {
-            solutionAnnotationSession.load(url: solutionURL)
+            solutionAnnotationSession.load(url: loadableURL(
+                solutionURL,
+                for: solutionAnnotationSession
+            ))
         }
+    }
+
+    private func loadableURL(
+        _ url: URL?,
+        for session: PDFAnnotationSession
+    ) -> URL? {
+        guard let url else { return nil }
+        guard annotationSaveCoordinator.hasPendingSave(for: url) else { return url }
+        return session.url == url && session.document != nil ? url : nil
     }
 
     func annotationSession(for url: URL) -> PDFAnnotationSession? {
@@ -308,6 +333,10 @@ struct PaperViewerScreen: View {
         pdfViewportStore.setPosition(position, for: paper.id, role: role)
     }
 
+    func hasPendingAnnotationSave(for url: URL) -> Bool {
+        annotationSaveCoordinator.hasPendingSave(for: url)
+    }
+
     private func savePendingAnnotations() throws {
         try questionAnnotationSession.saveIfNeeded()
         if solutionURL != questionURL {
@@ -316,12 +345,26 @@ struct PaperViewerScreen: View {
     }
 
     func saveAnnotationsAndDismiss() {
-        do {
-            try savePendingAnnotations()
-            pdfViewportStore.flushPendingPersistence()
-            dismiss()
-        } catch {
-            paperUpdateError = error.localizedDescription
+        queuePendingAnnotationSave()
+        pdfViewportStore.flushPendingPersistence()
+        dismiss()
+    }
+
+    private func queuePendingAnnotationSave() {
+        var requests = [PDFAnnotationSaveRequest]()
+        if let request = questionAnnotationSession.makeDeferredSaveRequestIfNeeded() {
+            requests.append(request)
+        }
+        if solutionURL != questionURL,
+           let request = solutionAnnotationSession.makeDeferredSaveRequestIfNeeded() {
+            requests.append(request)
+        }
+        annotationSaveCoordinator.enqueue(requests)
+    }
+
+    func scheduleAnnotationAutosave(for session: PDFAnnotationSession?) {
+        session?.scheduleAutosave { request in
+            annotationSaveCoordinator.enqueue([request])
         }
     }
 

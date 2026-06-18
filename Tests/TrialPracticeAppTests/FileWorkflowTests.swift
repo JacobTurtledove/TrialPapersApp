@@ -240,6 +240,37 @@ struct FileWorkflowTests {
         #expect(clearedStore.position(for: paperID, role: .solutions) == nil)
     }
 
+    @MainActor
+    @Test
+    func pdfAnnotationSessionCreatesDeferredSaveRequestForDirtyDocument() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let pdfURL = rootURL.appending(path: "annotated.pdf")
+        try makePDF(pageCount: 1, at: pdfURL)
+
+        let session = PDFAnnotationSession()
+        session.load(url: pdfURL)
+
+        let document = try #require(session.document)
+        let page = try #require(document.page(at: 0))
+        page.addAnnotation(makeInkAnnotation(
+            bounds: NSRect(x: 20, y: 20, width: 80, height: 20),
+            start: NSPoint(x: 0, y: 10),
+            end: NSPoint(x: 70, y: 10)
+        ))
+        session.markDirty()
+
+        let saveRequest = try #require(session.makeDeferredSaveRequestIfNeeded())
+        #expect(session.makeDeferredSaveRequestIfNeeded() == nil)
+
+        try saveRequest.save()
+
+        let reloadedDocument = try #require(PDFDocument(url: pdfURL))
+        let reloadedPage = try #require(reloadedDocument.page(at: 0))
+        #expect(reloadedPage.annotations.count == 1)
+    }
+
     @Test
     func pdfPageSubsetLoaderCopiesPagesFromSourceDocument() throws {
         let rootURL = try temporaryDirectory()
