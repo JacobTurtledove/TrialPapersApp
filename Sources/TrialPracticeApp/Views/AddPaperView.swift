@@ -299,7 +299,6 @@ struct AddPaperView: View {
                 subject: subject,
                 school: school,
                 year: validatedYear,
-                mark: nil,
                 mode: solutionsIncluded || solutionsPDFURL == nil ? .combined : .separate,
                 questionPDFURL: questionPDFURL,
                 solutionsPDFURL: solutionsPDFURL
@@ -315,7 +314,6 @@ struct AddPaperView: View {
                     subjectID: subject.id,
                     schoolID: school.id,
                     year: validatedYear,
-                    mark: nil,
                     questionPDFRelativePath: files.combinedRelativePath,
                     solutionsPDFRelativePath: files.combinedRelativePath,
                     combinedPDFRelativePath: files.combinedRelativePath,

@@ -63,7 +63,6 @@ final class THSCImportCoordinator: ObservableObject {
                         subject: subject,
                         school: school,
                         year: listing.year,
-                        mark: nil,
                         mode: .combined,
                         questionPDFURL: temporaryURL,
                         solutionsPDFURL: nil

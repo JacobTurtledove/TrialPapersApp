@@ -7,7 +7,7 @@ final class Paper {
     var subjectID: UUID
     var schoolID: UUID
     var year: String
-    var mark: Double?
+    var notes: String?
     var questionPDFRelativePath: String
     var solutionsPDFRelativePath: String
     var combinedPDFRelativePath: String?
@@ -26,7 +26,7 @@ final class Paper {
         subjectID: UUID,
         schoolID: UUID,
         year: String,
-        mark: Double? = nil,
+        notes: String? = nil,
         questionPDFRelativePath: String,
         solutionsPDFRelativePath: String,
         combinedPDFRelativePath: String? = nil,
@@ -40,7 +40,7 @@ final class Paper {
         self.subjectID = subjectID
         self.schoolID = schoolID
         self.year = year
-        self.mark = mark
+        self.notes = notes
         self.questionPDFRelativePath = questionPDFRelativePath
         self.solutionsPDFRelativePath = solutionsPDFRelativePath
         self.combinedPDFRelativePath = combinedPDFRelativePath

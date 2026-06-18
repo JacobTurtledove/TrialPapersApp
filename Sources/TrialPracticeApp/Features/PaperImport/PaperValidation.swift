@@ -8,10 +8,4 @@ enum PaperValidation {
         }
         return trimmed
     }
-
-    static func mark(from input: String) -> Double? {
-        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-        return Double(trimmed)
-    }
 }

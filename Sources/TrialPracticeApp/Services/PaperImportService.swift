@@ -12,7 +12,6 @@ struct PaperImportRequest {
     let subject: Subject
     let school: School
     let year: String
-    let mark: Double?
     let mode: PaperImportMode
     let questionPDFURL: URL
     let solutionsPDFURL: URL?

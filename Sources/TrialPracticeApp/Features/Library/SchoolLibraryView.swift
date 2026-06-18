@@ -19,6 +19,7 @@ struct SchoolLibraryView: View {
     @State private var deletionError: String?
     @State private var exportMessage: String?
     @State private var exportedURL: URL?
+    @State private var expandedNotePaperIDs: Set<UUID> = []
 
     private let columns = [
         GridItem(.adaptive(minimum: 220, maximum: 290), spacing: 20)
@@ -63,30 +64,78 @@ struct SchoolLibraryView: View {
                 ScrollView {
                     LazyVGrid(columns: columns, alignment: .leading, spacing: 22) {
                         ForEach(papers) { paper in
-                            ZStack(alignment: .bottomLeading) {
-                                NavigationLink {
-                                    PaperViewerScreen(
-                                        paper: paper,
-                                        subject: subject,
-                                        school: school
-                                    )
-                                } label: {
-                                    PaperLibraryCard(
-                                        paper: paper,
-                                        flaggedCount: flaggedQuestions.filter {
-                                            $0.paperID == paper.id && $0.deletedAt == nil
-                                        }.count
-                                    )
-                                }
-                                .buttonStyle(.plain)
+                            VStack(alignment: .leading, spacing: 8) {
+                                ZStack(alignment: .bottomLeading) {
+                                    NavigationLink {
+                                        PaperViewerScreen(
+                                            paper: paper,
+                                            subject: subject,
+                                            school: school
+                                        )
+                                    } label: {
+                                        PaperLibraryCard(
+                                            paper: paper,
+                                            flaggedCount: flaggedQuestions.filter {
+                                                $0.paperID == paper.id && $0.deletedAt == nil
+                                            }.count
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
 
-                                Toggle(
-                                    "Completed",
-                                    isOn: completionBinding(for: paper)
-                                )
-                                .toggleStyle(.checkbox)
-                                .padding(.leading, 18)
-                                .padding(.bottom, 16)
+                                    Toggle(
+                                        "Completed",
+                                        isOn: completionBinding(for: paper)
+                                    )
+                                    .toggleStyle(.checkbox)
+                                    .padding(.leading, 18)
+                                    .padding(.bottom, 16)
+                                }
+
+                                VStack(alignment: .leading, spacing: 10) {
+                                    Button {
+                                        toggleNotes(for: paper)
+                                    } label: {
+                                        HStack(spacing: 8) {
+                                            Image(
+                                                systemName: isNotesExpanded(for: paper)
+                                                    ? "chevron.down"
+                                                    : "chevron.right"
+                                            )
+                                            .font(.caption.weight(.semibold))
+                                            .frame(width: 12)
+                                            .foregroundStyle(.secondary)
+
+                                            Label("Notes", systemImage: "note.text")
+                                                .font(.callout)
+
+                                            Spacer(minLength: 0)
+                                        }
+                                        .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    if isNotesExpanded(for: paper) {
+                                        TextEditor(text: notesBinding(for: paper))
+                                            .font(.body)
+                                            .scrollContentBackground(.hidden)
+                                            .frame(minHeight: 82)
+                                            .padding(8)
+                                            .background(.background, in: RoundedRectangle(cornerRadius: 8))
+                                            .overlay {
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .stroke(.separator.opacity(0.7), lineWidth: 1)
+                                            }
+                                            .accessibilityLabel("Paper notes")
+                                    }
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(.separator.opacity(0.5), lineWidth: 1)
+                                }
                             }
                             .contextMenu {
                                 Button("Show in Finder") {
@@ -191,6 +240,36 @@ struct SchoolLibraryView: View {
         } catch {
             deletionError = error.localizedDescription
         }
+    }
+
+    private func isNotesExpanded(for paper: Paper) -> Bool {
+        expandedNotePaperIDs.contains(paper.id)
+    }
+
+    private func toggleNotes(for paper: Paper) {
+        if expandedNotePaperIDs.contains(paper.id) {
+            expandedNotePaperIDs.remove(paper.id)
+        } else {
+            expandedNotePaperIDs.insert(paper.id)
+        }
+    }
+
+    private func notesBinding(for paper: Paper) -> Binding<String> {
+        Binding(
+            get: { paper.notes ?? "" },
+            set: { newValue in
+                let oldValue = paper.notes
+                let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                paper.notes = trimmed.isEmpty ? nil : newValue
+                do {
+                    try modelContext.save()
+                } catch {
+                    paper.notes = oldValue
+                    modelContext.rollback()
+                    deletionError = error.localizedDescription
+                }
+            }
+        )
     }
 
     private func completionBinding(for paper: Paper) -> Binding<Bool> {

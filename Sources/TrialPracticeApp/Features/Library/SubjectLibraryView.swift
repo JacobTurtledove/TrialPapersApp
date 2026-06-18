@@ -300,8 +300,7 @@ struct SubjectLibraryView: View {
                 SubjectPaperCSVRow(
                     schoolName: schools.first { $0.id == paper.schoolID }?.displayName
                         ?? "Unknown School",
-                    year: paper.year,
-                    mark: paper.mark
+                    year: paper.year
                 )
             }
             try SubjectPaperCSVService().export(rows: rows, to: destinationURL)

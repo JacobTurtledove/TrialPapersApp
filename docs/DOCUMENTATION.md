@@ -92,8 +92,8 @@ and opens `RootView`.
 ### Library
 
 Users create subjects, navigate `Subject > School > Paper`, open PDFs, export
-files, reveal files in Finder, mark completion, edit subject names/colors, and
-soft-delete subjects/papers/questions into the Bin.
+files, reveal files in Finder, track completion, edit subject names/colors, add
+expandable paper notes, and soft-delete subjects/papers/questions into the Bin.
 
 ### Manual Paper Import
 
@@ -253,7 +253,7 @@ and can break existing local data.
 
 | File | Purpose |
 | --- | --- |
-| `Features/PaperImport/PaperValidation.swift` | Year/mark validation helpers. |
+| `Features/PaperImport/PaperValidation.swift` | Year validation helpers. |
 | `Features/PaperImport/PaperFileNames.swift` | Stored paper filename generation. |
 | `Features/PaperImport/PDFPickerTarget.swift` | Picker target enum for question or solutions PDF. |
 | `Features/PaperImport/PDFSelectionRow.swift` | Reusable PDF selection row UI. |
@@ -317,7 +317,7 @@ and can break existing local data.
 
 | File | Purpose |
 | --- | --- |
-| `PaperValidationTests.swift` | Year/mark validation and paper filename behavior. |
+| `PaperValidationTests.swift` | Year validation and paper filename behavior. |
 | `NameNormalizerTests.swift` | Display and filename normalization rules. |
 | `StoredFilePathTests.swift` | Relative path validation and root containment. |
 | `FinderRevealServiceTests.swift` | Finder reveal path safety. |

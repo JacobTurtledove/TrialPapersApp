@@ -57,10 +57,17 @@ struct PaperValidationTests {
     }
 
     @Test
-    func parsesDecimalMarksWithoutPercentSigns() {
-        #expect(PaperValidation.mark(from: "84.5") == 84.5)
-        #expect(PaperValidation.mark(from: "") == nil)
-        #expect(PaperValidation.mark(from: "84.5%") == nil)
+    func papersCanStoreNotes() {
+        let paper = Paper(
+            subjectID: UUID(),
+            schoolID: UUID(),
+            year: "2025",
+            notes: "Completed multis",
+            questionPDFRelativePath: "paper.pdf",
+            solutionsPDFRelativePath: "paper.pdf"
+        )
+
+        #expect(paper.notes == "Completed multis")
     }
 
     @Test

@@ -21,16 +21,8 @@ struct PaperLibraryCard: View {
                 .foregroundStyle(.primary)
 
             HStack {
-                if let mark = paper.mark {
-                    Label(
-                        "\(mark.formatted(.number.precision(.fractionLength(0...2))))%",
-                        systemImage: "percent"
-                    )
-                } else {
-                    Label("No mark", systemImage: "minus.circle")
-                }
-                Spacer()
                 Label("\(flaggedCount)", systemImage: "flag")
+                Spacer()
             }
             .font(.callout)
             .foregroundStyle(.secondary)

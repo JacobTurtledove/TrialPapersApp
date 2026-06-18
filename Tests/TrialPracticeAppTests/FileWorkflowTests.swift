@@ -15,28 +15,25 @@ struct FileWorkflowTests {
         let rows = [
             SubjectPaperCSVRow(
                 schoolName: "North Sydney Boys",
-                year: "2025",
-                mark: 84.5
+                year: "2025"
             ),
             SubjectPaperCSVRow(
                 schoolName: "James Ruse, Senior Campus",
-                year: "2024",
-                mark: nil
+                year: "2024"
             ),
             SubjectPaperCSVRow(
                 schoolName: "A \"Quoted\" School",
-                year: "2023",
-                mark: 79
+                year: "2023"
             )
         ]
 
         let data = try SubjectPaperCSVService().csvData(rows: rows)
         let csv = try #require(String(data: data, encoding: .utf8))
 
-        #expect(csv.hasPrefix("School,Year,Mark\n"))
-        #expect(csv.contains("\"James Ruse, Senior Campus\",2024,\n"))
-        #expect(csv.contains("\"A \"\"Quoted\"\" School\",2023,79.0\n"))
-        #expect(csv.contains("North Sydney Boys,2025,84.5\n"))
+        #expect(csv.hasPrefix("School,Year\n"))
+        #expect(csv.contains("\"James Ruse, Senior Campus\",2024\n"))
+        #expect(csv.contains("\"A \"\"Quoted\"\" School\",2023\n"))
+        #expect(csv.contains("North Sydney Boys,2025\n"))
     }
 
     @Test
@@ -339,7 +336,6 @@ struct FileWorkflowTests {
                 subject: subject,
                 school: school,
                 year: "2025",
-                mark: 80,
                 mode: .separate,
                 questionPDFURL: questionsURL,
                 solutionsPDFURL: solutionsURL
@@ -371,7 +367,6 @@ struct FileWorkflowTests {
                 subject: subject,
                 school: school,
                 year: "2025",
-                mark: nil,
                 mode: .separate,
                 questionPDFURL: questionsURL,
                 solutionsPDFURL: solutionsURL
@@ -405,7 +400,6 @@ struct FileWorkflowTests {
                 subject: subject,
                 school: school,
                 year: "2024",
-                mark: nil,
                 mode: .combined,
                 questionPDFURL: combinedURL,
                 solutionsPDFURL: nil
@@ -431,7 +425,6 @@ struct FileWorkflowTests {
             subject: subject,
             school: school,
             year: "2025",
-            mark: nil,
             mode: .separate,
             questionPDFURL: questionsURL,
             solutionsPDFURL: solutionsURL

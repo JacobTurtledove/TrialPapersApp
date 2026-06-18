@@ -3,7 +3,6 @@ import Foundation
 struct SubjectPaperCSVRow {
     let schoolName: String
     let year: String
-    let mark: Double?
 }
 
 struct SubjectPaperCSVService {
@@ -31,13 +30,11 @@ struct SubjectPaperCSVService {
             return schoolComparison == .orderedAscending
         }
 
-        var lines = ["School,Year,Mark"]
+        var lines = ["School,Year"]
         for row in sortedRows {
-            let markValue = row.mark.map { String($0) } ?? ""
             let line = [
                 escaped(row.schoolName),
-                escaped(row.year),
-                markValue
+                escaped(row.year)
             ].joined(separator: ",")
             lines.append(line)
         }
