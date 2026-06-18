@@ -203,6 +203,43 @@ struct FileWorkflowTests {
         #expect(secondResult.latestCompletedVersion == nil)
     }
 
+    @MainActor
+    @Test
+    func pdfViewportStorePersistsAndClearsPaperPositions() throws {
+        let suiteName = "PDFViewerViewportStoreTests-\(UUID().uuidString)"
+        let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+        defer {
+            userDefaults.removePersistentDomain(forName: suiteName)
+        }
+
+        let paperID = UUID()
+        let questionPosition = PDFViewportPosition(
+            pageIndex: 9,
+            pointX: 42,
+            pointY: 320
+        )
+        let solutionPosition = PDFViewportPosition(
+            pageIndex: 3,
+            pointX: 10,
+            pointY: 90
+        )
+
+        let store = PDFViewerViewportStore(userDefaults: userDefaults)
+        store.setPosition(questionPosition, for: paperID, role: .questions)
+        store.setPosition(solutionPosition, for: paperID, role: .solutions)
+        store.flushPendingPersistence()
+
+        let reloadedStore = PDFViewerViewportStore(userDefaults: userDefaults)
+        #expect(reloadedStore.position(for: paperID, role: .questions) == questionPosition)
+        #expect(reloadedStore.position(for: paperID, role: .solutions) == solutionPosition)
+
+        reloadedStore.clearPositions(for: paperID)
+
+        let clearedStore = PDFViewerViewportStore(userDefaults: userDefaults)
+        #expect(clearedStore.position(for: paperID, role: .questions) == nil)
+        #expect(clearedStore.position(for: paperID, role: .solutions) == nil)
+    }
+
     @Test
     func preparesAndRenamesSubjectFolders() throws {
         let rootURL = try temporaryDirectory()

@@ -1,5 +1,85 @@
 import Combine
+import Foundation
 import PDFKit
+
+enum PDFViewportDocumentRole: String, CaseIterable, Codable {
+    case questions
+    case solutions
+}
+
+struct PDFViewportPosition: Codable, Equatable {
+    var pageIndex: Int
+    var pointX: Double
+    var pointY: Double
+}
+
+@MainActor
+final class PDFViewerViewportStore: ObservableObject {
+    private let userDefaults: UserDefaults
+    private let storageKey = "pdfViewer.viewportPositions.v1"
+    private var positions: [String: PDFViewportPosition]
+    private var pendingPersistenceTask: Task<Void, Never>?
+
+    init(userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
+        if let data = userDefaults.data(forKey: storageKey),
+           let decoded = try? JSONDecoder().decode(
+               [String: PDFViewportPosition].self,
+               from: data
+           ) {
+            positions = decoded
+        } else {
+            positions = [:]
+        }
+    }
+
+    func position(
+        for paperID: UUID,
+        role: PDFViewportDocumentRole
+    ) -> PDFViewportPosition? {
+        positions[key(for: paperID, role: role)]
+    }
+
+    func setPosition(
+        _ position: PDFViewportPosition,
+        for paperID: UUID,
+        role: PDFViewportDocumentRole
+    ) {
+        positions[key(for: paperID, role: role)] = position
+        schedulePersistence()
+    }
+
+    func clearPositions(for paperID: UUID) {
+        PDFViewportDocumentRole.allCases.forEach {
+            positions.removeValue(forKey: key(for: paperID, role: $0))
+        }
+        persistImmediately()
+    }
+
+    func flushPendingPersistence() {
+        persistImmediately()
+    }
+
+    private func key(for paperID: UUID, role: PDFViewportDocumentRole) -> String {
+        "\(paperID.uuidString).\(role.rawValue)"
+    }
+
+    private func schedulePersistence() {
+        pendingPersistenceTask?.cancel()
+        pendingPersistenceTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            self?.persistImmediately()
+        }
+    }
+
+    private func persistImmediately() {
+        pendingPersistenceTask?.cancel()
+        pendingPersistenceTask = nil
+        guard let data = try? JSONEncoder().encode(positions) else { return }
+        userDefaults.set(data, forKey: storageKey)
+    }
+}
 
 @MainActor
 final class PDFViewerController: ObservableObject {

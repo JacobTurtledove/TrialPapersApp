@@ -6,6 +6,7 @@ import SwiftUI
 struct PaperViewerScreen: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var pdfViewportStore: PDFViewerViewportStore
     @Environment(\.modelContext) private var modelContext
     @Query private var existingQuestions: [FlaggedQuestion]
 
@@ -106,6 +107,7 @@ struct PaperViewerScreen: View {
         .onDisappear {
             do {
                 try savePendingAnnotations()
+                pdfViewportStore.flushPendingPersistence()
             } catch {
                 paperUpdateError = error.localizedDescription
             }
@@ -227,6 +229,7 @@ struct PaperViewerScreen: View {
         do {
             try modelContext.save()
             showSolutionsStartPicker = false
+            pdfViewportStore.clearPositions(for: paper.id)
             viewingMode = .both
         } catch {
             modelContext.rollback()
@@ -241,6 +244,7 @@ struct PaperViewerScreen: View {
         showSolutionsStartPicker = false
         do {
             try modelContext.save()
+            pdfViewportStore.clearPositions(for: paper.id)
         } catch {
             modelContext.rollback()
             captureError = error.localizedDescription
@@ -293,6 +297,17 @@ struct PaperViewerScreen: View {
         }
     }
 
+    func viewportPosition(for role: PDFViewportDocumentRole) -> PDFViewportPosition? {
+        pdfViewportStore.position(for: paper.id, role: role)
+    }
+
+    func saveViewportPosition(
+        _ position: PDFViewportPosition,
+        for role: PDFViewportDocumentRole
+    ) {
+        pdfViewportStore.setPosition(position, for: paper.id, role: role)
+    }
+
     private func savePendingAnnotations() throws {
         try questionAnnotationSession.saveIfNeeded()
         if solutionURL != questionURL {
@@ -303,6 +318,7 @@ struct PaperViewerScreen: View {
     func saveAnnotationsAndDismiss() {
         do {
             try savePendingAnnotations()
+            pdfViewportStore.flushPendingPersistence()
             dismiss()
         } catch {
             paperUpdateError = error.localizedDescription

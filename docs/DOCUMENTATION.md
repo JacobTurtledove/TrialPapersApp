@@ -107,6 +107,13 @@ paper path, and rolls back created files if persistence fails.
 annotation tools, export/reveal actions, and flagged-question capture.
 Pen strokes are stored as PDF ink annotations, and the eraser removes whole ink
 strokes from the annotatable PDF document.
+The viewer persists the user's last visible PDF position separately for the
+questions and solutions panes, so switching between Questions, Solutions, and
+Both views or reopening the app restores the last viewed location for each side.
+Viewport positions are app settings stored in `UserDefaults` under
+`pdfViewer.viewportPositions.v1`; they are not SwiftData model state and do not
+require a database migration. Changing the first solutions page clears the saved
+viewport positions for that paper because the displayed page mapping changes.
 PDFKit bridge code lives under `Infrastructure/PDF`.
 
 ### Flagged Questions
@@ -163,11 +170,11 @@ and can break existing local data.
 | File | Purpose |
 | --- | --- |
 | `Views/RootView.swift` | Hosts navigation and runs storage migrations. |
-| `Views/MainNavigationView.swift` | Sidebar destinations, navigation coordinator, shared environment objects. |
+| `Views/MainNavigationView.swift` | Sidebar destinations, navigation coordinator, shared environment objects, and the app-wide PDF viewport store. |
 | `Views/LibraryView.swift` | Top-level library screen for subjects and full-library export. |
 | `Views/AddPaperView.swift` | Manual paper import sheet and SwiftData insertion/rollback coordination. |
-| `Views/PaperViewerScreen.swift` | Main PDF viewer workflow and state. |
-| `Views/PDFViewerView.swift` | SwiftUI wrapper around PDFKit view/controller integration. |
+| `Views/PaperViewerScreen.swift` | Main PDF viewer workflow, annotation save lifecycle, and per-paper viewport persistence/reset coordination. |
+| `Views/PDFViewerView.swift` | SwiftUI wrapper around PDFKit view/controller integration, including viewport capture/restore. |
 | `Views/THSCImportView.swift` | THSC importer screen state and import selection flow. |
 | `Views/FlaggedQuestionsView.swift` | Flagged-question subject overview. |
 | `Views/RevisionBookletsView.swift` | Revision booklet filter/export screen state. |
@@ -203,7 +210,7 @@ and can break existing local data.
 | --- | --- |
 | `Infrastructure/Storage/StoredFilePath.swift` | Validates stored relative paths and resolves them safely under a root URL. |
 | `Infrastructure/Storage/StorageMigrationService.swift` | Versioned storage migrations; currently embeds legacy crest files as model data. |
-| `Infrastructure/PDF/PDFViewerController.swift` | Imperative PDF view control: zoom, fit width, capture overlay. |
+| `Infrastructure/PDF/PDFViewerController.swift` | Imperative PDF view control: zoom, fit width, capture overlay, and `UserDefaults`-backed viewport position storage. |
 | `Infrastructure/PDF/SelectablePDFView.swift` | PDFKit view subclass used by the SwiftUI bridge. |
 | `Infrastructure/PDF/PDFAnnotationSession.swift` | Loads/saves annotatable PDF documents and dirty state. |
 | `Infrastructure/PDF/PDFAnnotationEditing.swift` | Annotation editing behavior on the selectable PDF view. |

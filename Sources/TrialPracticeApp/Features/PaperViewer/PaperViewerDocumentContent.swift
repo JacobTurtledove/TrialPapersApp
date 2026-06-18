@@ -9,6 +9,7 @@ extension PaperViewerScreen {
                 url: questionURL,
                 selection: questionSelection,
                 controller: questionController,
+                viewportRole: .questions,
                 label: "question paper"
             )
         case .solutions:
@@ -16,6 +17,7 @@ extension PaperViewerScreen {
                 url: solutionURL,
                 selection: solutionSelection,
                 controller: solutionController,
+                viewportRole: .solutions,
                 label: "solutions paper"
             )
         case .both:
@@ -25,6 +27,7 @@ extension PaperViewerScreen {
                     url: questionURL,
                     selection: questionSelection,
                     controller: questionController,
+                    viewportRole: .questions,
                     label: "question paper"
                 )
                 labeledDocumentView(
@@ -32,6 +35,7 @@ extension PaperViewerScreen {
                     url: solutionURL,
                     selection: solutionSelection,
                     controller: solutionController,
+                    viewportRole: .solutions,
                     label: "solutions paper"
                 )
             }
@@ -43,6 +47,7 @@ extension PaperViewerScreen {
         url: URL?,
         selection: PDFPageSelection,
         controller: PDFViewerController,
+        viewportRole: PDFViewportDocumentRole,
         label: String
     ) -> some View {
         VStack(spacing: 0) {
@@ -56,6 +61,7 @@ extension PaperViewerScreen {
                 url: url,
                 selection: selection,
                 controller: controller,
+                viewportRole: viewportRole,
                 label: label
             )
         }
@@ -67,6 +73,7 @@ extension PaperViewerScreen {
         url: URL?,
         selection: PDFPageSelection,
         controller: PDFViewerController,
+        viewportRole: PDFViewportDocumentRole,
         label: String
     ) -> some View {
         if let url {
@@ -75,8 +82,12 @@ extension PaperViewerScreen {
                 url: url,
                 sourceDocument: annotationSession?.document,
                 selection: selection,
+                viewportPosition: viewportPosition(for: viewportRole),
                 drawingTool: activeDrawingTool,
                 penConfigurations: penConfigurations,
+                onViewportChanged: { position in
+                    saveViewportPosition(position, for: viewportRole)
+                },
                 onAnnotationsChanged: {
                     annotationSession?.markDirty()
                 },

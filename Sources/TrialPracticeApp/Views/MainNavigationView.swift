@@ -37,6 +37,7 @@ struct MainNavigationView: View {
     @State private var detailPath = NavigationPath()
     @StateObject private var navigationCoordinator = AppNavigationCoordinator()
     @StateObject private var thscImportCoordinator = THSCImportCoordinator()
+    @StateObject private var pdfViewportStore = PDFViewerViewportStore()
 
     var body: some View {
         NavigationSplitView {
@@ -71,6 +72,7 @@ struct MainNavigationView: View {
         }
         .environmentObject(navigationCoordinator)
         .environmentObject(thscImportCoordinator)
+        .environmentObject(pdfViewportStore)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if thscImportCoordinator.isImporting {
                 THSCImportProgressBar(coordinator: thscImportCoordinator)
