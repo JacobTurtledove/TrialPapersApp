@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 enum NavigationItem: String, CaseIterable, Identifiable {
@@ -36,11 +37,90 @@ final class AppNavigationCoordinator: ObservableObject {
     }
 
     func focusDetailColumn() {
-        splitViewVisibility = .detailOnly
+        if SidebarVisibilityController.collapseSidebarIfVisible() {
+            return
+        }
+        withAnimation(.easeInOut(duration: 0.25)) {
+            splitViewVisibility = .detailOnly
+        }
     }
 
     func restoreAutomaticSplitViewVisibility() {
-        splitViewVisibility = .automatic
+        if SidebarVisibilityController.expandSidebarIfCollapsed() {
+            splitViewVisibility = .automatic
+            return
+        }
+        withAnimation(.easeInOut(duration: 0.25)) {
+            splitViewVisibility = .automatic
+        }
+    }
+}
+
+@MainActor
+private enum SidebarVisibilityController {
+    static func collapseSidebarIfVisible() -> Bool {
+        guard let splitViewController else {
+            return false
+        }
+        guard let sidebarItem = splitViewController.splitViewItems.first else {
+            return false
+        }
+        guard !sidebarItem.isCollapsed else {
+            return true
+        }
+        splitViewController.toggleSidebar(nil)
+        return true
+    }
+
+    static func expandSidebarIfCollapsed() -> Bool {
+        guard let splitViewController else {
+            return false
+        }
+        guard let sidebarItem = splitViewController.splitViewItems.first else {
+            return false
+        }
+        guard sidebarItem.isCollapsed else {
+            return false
+        }
+        splitViewController.toggleSidebar(nil)
+        return true
+    }
+
+    private static var splitViewController: NSSplitViewController? {
+        if let actionTarget = NSApp.target(
+            forAction: #selector(NSSplitViewController.toggleSidebar(_:)),
+            to: nil,
+            from: nil
+        ) as? NSSplitViewController {
+            return actionTarget
+        }
+
+        let activeWindows = [NSApp.keyWindow, NSApp.mainWindow].compactMap { $0 }
+        for window in activeWindows + NSApp.windows {
+            if let splitViewController = findSplitViewController(
+                in: window.contentViewController
+            ) {
+                return splitViewController
+            }
+        }
+        return nil
+    }
+
+    private static func findSplitViewController(
+        in viewController: NSViewController?
+    ) -> NSSplitViewController? {
+        guard let viewController else {
+            return nil
+        }
+        if let splitViewController = viewController as? NSSplitViewController {
+            return splitViewController
+        }
+        for child in viewController.children {
+            if let splitViewController = findSplitViewController(in: child) {
+                return splitViewController
+            }
+        }
+        return nil
     }
 }
 

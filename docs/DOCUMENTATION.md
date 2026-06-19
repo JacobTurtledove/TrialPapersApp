@@ -104,7 +104,11 @@ paper path, and rolls back created files if persistence fails.
 ### PDF Viewing And Annotation
 
 `PaperViewerScreen` coordinates paper display, question/solution page modes,
-annotation tools, export/reveal actions, and flagged-question capture.
+annotation tools, export/reveal actions, and flagged-question capture. Opening a
+paper asks the main navigation coordinator to focus the detail column, and
+leaving the viewer restores the sidebar. Both transitions use the standard
+macOS sidebar toggle when possible so the automatic sidebar motion matches the
+normal sidebar button.
 Pen strokes are stored as PDF ink annotations, and the eraser removes whole ink
 strokes from the annotatable PDF document.
 Dirty annotation sessions autosave after a short idle delay. Closing a dirty
