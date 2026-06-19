@@ -84,6 +84,10 @@ extension SelectablePDFView {
     }
 
     func eraseInkAnnotation(onDisplayedPage displayedPage: PDFPage, at pagePoint: NSPoint) {
+        eraseInkAnnotation(onDisplayedPage: displayedPage, from: pagePoint, to: pagePoint)
+    }
+
+    func eraseInkAnnotation(onDisplayedPage displayedPage: PDFPage, from startPoint: NSPoint, to endPoint: NSPoint) {
         guard
             let sourceDocument,
             let document,
@@ -99,7 +103,7 @@ extension SelectablePDFView {
         let eraserRadius: CGFloat = 8
         guard let displayedTarget = displayedPage.annotations.reversed().first(where: { annotation in
             isInkAnnotation(annotation) &&
-                inkAnnotation(annotation, isNear: pagePoint, radius: eraserRadius)
+                inkAnnotation(annotation, intersectsSegmentFrom: startPoint, to: endPoint, radius: eraserRadius)
         }) else {
             return
         }
@@ -112,7 +116,7 @@ extension SelectablePDFView {
             if let marker, !marker.isEmpty, annotation.contents == marker {
                 return true
             }
-            return inkAnnotation(annotation, isNear: pagePoint, radius: eraserRadius)
+            return inkAnnotation(annotation, intersectsSegmentFrom: startPoint, to: endPoint, radius: eraserRadius)
         }) {
             sourcePage.removeAnnotation(sourceTarget)
         }

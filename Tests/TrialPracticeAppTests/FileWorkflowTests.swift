@@ -847,6 +847,22 @@ struct FileWorkflowTests {
     }
 
     @Test
+    func inkEraserHitTestingMatchesSweptSegmentBetweenMousePoints() {
+        let annotation = makeInkAnnotation(
+            bounds: NSRect(x: 100, y: 100, width: 60, height: 40),
+            start: NSPoint(x: 0, y: 20),
+            end: NSPoint(x: 50, y: 20)
+        )
+
+        let startPoint = NSPoint(x: 125, y: 70)
+        let endPoint = NSPoint(x: 125, y: 170)
+
+        #expect(!inkAnnotation(annotation, isNear: startPoint, radius: 6))
+        #expect(!inkAnnotation(annotation, isNear: endPoint, radius: 6))
+        #expect(inkAnnotation(annotation, intersectsSegmentFrom: startPoint, to: endPoint, radius: 6))
+    }
+
+    @Test
     @MainActor
     func eraserRemovesPDFKitInkAnnotation() throws {
         let document = PDFDocument()
@@ -875,6 +891,44 @@ struct FileWorkflowTests {
         }
 
         pdfView.eraseInkAnnotation(onDisplayedPage: page, at: NSPoint(x: 125, y: 120))
+
+        #expect(page.annotations.isEmpty)
+        #expect(didChangeAnnotations)
+    }
+
+    @Test
+    @MainActor
+    func eraserRemovesPDFKitInkAnnotationAlongSweptSegment() throws {
+        let document = PDFDocument()
+        let image = NSImage(size: NSSize(width: 200, height: 200))
+        image.lockFocus()
+        NSColor.white.setFill()
+        NSRect(x: 0, y: 0, width: 200, height: 200).fill()
+        image.unlockFocus()
+
+        let page = try #require(PDFPage(image: image))
+        let annotation = makeInkAnnotation(
+            bounds: NSRect(x: 100, y: 100, width: 60, height: 40),
+            start: NSPoint(x: 0, y: 20),
+            end: NSPoint(x: 50, y: 20)
+        )
+        page.addAnnotation(annotation)
+        document.insert(page, at: 0)
+
+        let pdfView = SelectablePDFView()
+        pdfView.document = document
+        pdfView.sourceDocument = document
+        pdfView.pageSelection = .all
+        var didChangeAnnotations = false
+        pdfView.onAnnotationsChanged = {
+            didChangeAnnotations = true
+        }
+
+        pdfView.eraseInkAnnotation(
+            onDisplayedPage: page,
+            from: NSPoint(x: 125, y: 70),
+            to: NSPoint(x: 125, y: 170)
+        )
 
         #expect(page.annotations.isEmpty)
         #expect(didChangeAnnotations)

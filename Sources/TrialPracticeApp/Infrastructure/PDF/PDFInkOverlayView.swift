@@ -8,14 +8,16 @@ final class PDFInkOverlayView: NSView {
         didSet {
             if drawingTool == .none {
                 currentStroke = nil
+                previousEraserPoint = nil
             }
             needsDisplay = true
         }
     }
     var penConfigurations: [PDFPenConfiguration] = []
     var onStrokeFinished: ((PDFPage, PDFInkStroke) -> Void)?
-    var onEraseAtPagePoint: ((PDFPage, NSPoint) -> Void)?
+    var onEraseAlongPageSegment: ((PDFPage, NSPoint, NSPoint) -> Void)?
     private var currentStroke: PDFInkStroke?
+    private var previousEraserPoint: NSPoint?
 
     override var isFlipped: Bool {
         false
@@ -46,7 +48,8 @@ final class PDFInkOverlayView: NSView {
             )
             needsDisplay = true
         case .eraser:
-            onEraseAtPagePoint?(page, pagePoint)
+            previousEraserPoint = pagePoint
+            onEraseAlongPageSegment?(page, pagePoint, pagePoint)
         }
     }
 
@@ -60,13 +63,16 @@ final class PDFInkOverlayView: NSView {
             currentStroke?.points.append(pagePoint)
             needsDisplay = true
         case .eraser:
-            onEraseAtPagePoint?(page, pagePoint)
+            let startPoint = previousEraserPoint ?? pagePoint
+            onEraseAlongPageSegment?(page, startPoint, pagePoint)
+            previousEraserPoint = pagePoint
         }
     }
 
     override func mouseUp(with event: NSEvent) {
         defer {
             currentStroke = nil
+            previousEraserPoint = nil
             needsDisplay = true
         }
 

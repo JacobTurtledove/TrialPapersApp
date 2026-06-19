@@ -42,8 +42,8 @@ final class PDFInkOverlayProvider: NSObject, @preconcurrency PDFPageOverlayViewP
         overlay.onStrokeFinished = { [weak owner] page, stroke in
             owner?.commitInkStroke(stroke, toDisplayedPage: page)
         }
-        overlay.onEraseAtPagePoint = { [weak owner] page, point in
-            owner?.eraseInkAnnotation(onDisplayedPage: page, at: point)
+        overlay.onEraseAlongPageSegment = { [weak owner] page, startPoint, endPoint in
+            owner?.eraseInkAnnotation(onDisplayedPage: page, from: startPoint, to: endPoint)
         }
     }
 }

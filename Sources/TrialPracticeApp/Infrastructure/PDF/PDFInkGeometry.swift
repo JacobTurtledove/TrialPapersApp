@@ -51,8 +51,20 @@ func decimatedPoints(_ points: [NSPoint], minimumDistance: CGFloat) -> [NSPoint]
 }
 
 func inkAnnotation(_ annotation: PDFAnnotation, isNear point: NSPoint, radius: CGFloat) -> Bool {
+    inkAnnotation(annotation, intersectsSegmentFrom: point, to: point, radius: radius)
+}
+
+func inkAnnotation(
+    _ annotation: PDFAnnotation,
+    intersectsSegmentFrom startPoint: NSPoint,
+    to endPoint: NSPoint,
+    radius: CGFloat
+) -> Bool {
     let effectiveRadius = max(radius, CGFloat(annotation.border?.lineWidth ?? 0) + 4)
-    guard annotation.bounds.insetBy(dx: -effectiveRadius, dy: -effectiveRadius).contains(point) else {
+    let annotationBounds = annotation.bounds.insetBy(dx: -effectiveRadius, dy: -effectiveRadius)
+    let segmentBounds = NSRect.containing(startPoint, endPoint)
+        .insetBy(dx: -effectiveRadius, dy: -effectiveRadius)
+    guard annotationBounds.intersects(segmentBounds) else {
         return false
     }
 
@@ -62,7 +74,12 @@ func inkAnnotation(_ annotation: PDFAnnotation, isNear point: NSPoint, radius: C
 
     for path in paths {
         let pathPoints = approximatePoints(from: path)
-        if pathPointsAreNear(pathPoints, point: point, radius: effectiveRadius) {
+        if pathPointsAreNear(
+            pathPoints,
+            segmentStart: startPoint,
+            segmentEnd: endPoint,
+            radius: effectiveRadius
+        ) {
             return true
         }
 
@@ -72,7 +89,12 @@ func inkAnnotation(_ annotation: PDFAnnotation, isNear point: NSPoint, radius: C
                 y: $0.y + annotation.bounds.minY
             )
         }
-        if pathPointsAreNear(pagePoints, point: point, radius: effectiveRadius) {
+        if pathPointsAreNear(
+            pagePoints,
+            segmentStart: startPoint,
+            segmentEnd: endPoint,
+            radius: effectiveRadius
+        ) {
             return true
         }
     }
@@ -80,24 +102,41 @@ func inkAnnotation(_ annotation: PDFAnnotation, isNear point: NSPoint, radius: C
     return false
 }
 
-private func pathPointsAreNear(_ pathPoints: [NSPoint], point: NSPoint, radius: CGFloat) -> Bool {
+private func pathPointsAreNear(
+    _ pathPoints: [NSPoint],
+    segmentStart: NSPoint,
+    segmentEnd: NSPoint,
+    radius: CGFloat
+) -> Bool {
     if pathPoints.count == 1, let pathPoint = pathPoints.first {
-        return hypot(pathPoint.x - point.x, pathPoint.y - point.y) <= radius
+        return distanceFromPointToSegment(point: pathPoint, start: segmentStart, end: segmentEnd) <= radius
     }
 
     guard pathPoints.count > 1 else { return false }
 
     for index in 0..<(pathPoints.count - 1) {
-        if distanceFromPointToSegment(
-            point: point,
+        if distanceFromSegmentToSegment(
             start: pathPoints[index],
-            end: pathPoints[index + 1]
+            end: pathPoints[index + 1],
+            otherStart: segmentStart,
+            otherEnd: segmentEnd
         ) <= radius {
             return true
         }
     }
 
     return false
+}
+
+private extension NSRect {
+    static func containing(_ startPoint: NSPoint, _ endPoint: NSPoint) -> NSRect {
+        NSRect(
+            x: min(startPoint.x, endPoint.x),
+            y: min(startPoint.y, endPoint.y),
+            width: abs(endPoint.x - startPoint.x),
+            height: abs(endPoint.y - startPoint.y)
+        )
+    }
 }
 
 private func approximatePoints(from path: NSBezierPath) -> [NSPoint] {
@@ -193,4 +232,61 @@ private func distanceFromPointToSegment(point p: NSPoint, start a: NSPoint, end 
     )
     let projection = NSPoint(x: a.x + t * dx, y: a.y + t * dy)
     return hypot(p.x - projection.x, p.y - projection.y)
+}
+
+private func distanceFromSegmentToSegment(
+    start a: NSPoint,
+    end b: NSPoint,
+    otherStart c: NSPoint,
+    otherEnd d: NSPoint
+) -> CGFloat {
+    if segmentsIntersect(start: a, end: b, otherStart: c, otherEnd: d) {
+        return 0
+    }
+
+    return min(
+        distanceFromPointToSegment(point: a, start: c, end: d),
+        distanceFromPointToSegment(point: b, start: c, end: d),
+        distanceFromPointToSegment(point: c, start: a, end: b),
+        distanceFromPointToSegment(point: d, start: a, end: b)
+    )
+}
+
+private func segmentsIntersect(start a: NSPoint, end b: NSPoint, otherStart c: NSPoint, otherEnd d: NSPoint) -> Bool {
+    let firstOrientation = orientation(a, b, c)
+    let secondOrientation = orientation(a, b, d)
+    let thirdOrientation = orientation(c, d, a)
+    let fourthOrientation = orientation(c, d, b)
+
+    if isApproximatelyZero(firstOrientation), point(c, isOnSegmentFrom: a, to: b) {
+        return true
+    }
+    if isApproximatelyZero(secondOrientation), point(d, isOnSegmentFrom: a, to: b) {
+        return true
+    }
+    if isApproximatelyZero(thirdOrientation), point(a, isOnSegmentFrom: c, to: d) {
+        return true
+    }
+    if isApproximatelyZero(fourthOrientation), point(b, isOnSegmentFrom: c, to: d) {
+        return true
+    }
+
+    return (firstOrientation > 0) != (secondOrientation > 0) &&
+        (thirdOrientation > 0) != (fourthOrientation > 0)
+}
+
+private func orientation(_ a: NSPoint, _ b: NSPoint, _ c: NSPoint) -> CGFloat {
+    (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
+}
+
+private func point(_ point: NSPoint, isOnSegmentFrom start: NSPoint, to end: NSPoint) -> Bool {
+    let epsilon: CGFloat = 0.0001
+    return point.x >= min(start.x, end.x) - epsilon &&
+        point.x <= max(start.x, end.x) + epsilon &&
+        point.y >= min(start.y, end.y) - epsilon &&
+        point.y <= max(start.y, end.y) + epsilon
+}
+
+private func isApproximatelyZero(_ value: CGFloat) -> Bool {
+    abs(value) <= 0.0001
 }
