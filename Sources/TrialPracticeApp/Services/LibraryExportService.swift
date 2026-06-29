@@ -156,6 +156,10 @@ struct LibraryExportService {
         guard FileManager.default.fileExists(atPath: sourceURL.path) else {
             throw ExportError.missingSource(storedPath.rawValue)
         }
+        let resolvedSource = sourceURL.standardizedFileURL.resolvingSymlinksInPath()
+        let resolvedDestination = destinationURL.standardizedFileURL.resolvingSymlinksInPath()
+        guard resolvedSource != resolvedDestination else { return }
+
         if FileManager.default.fileExists(atPath: destinationURL.path) {
             try FileManager.default.removeItem(at: destinationURL)
         }

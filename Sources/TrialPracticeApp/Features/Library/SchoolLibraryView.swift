@@ -65,31 +65,39 @@ struct SchoolLibraryView: View {
                     LazyVGrid(columns: columns, alignment: .leading, spacing: 22) {
                         ForEach(papers) { paper in
                             VStack(alignment: .leading, spacing: 8) {
-                                ZStack(alignment: .bottomLeading) {
-                                    NavigationLink {
-                                        PaperViewerScreen(
-                                            paper: paper,
-                                            subject: subject,
-                                            school: school
-                                        )
-                                    } label: {
-                                        PaperLibraryCard(
-                                            paper: paper,
-                                            flaggedCount: flaggedQuestions.filter {
-                                                $0.paperID == paper.id && $0.deletedAt == nil
-                                            }.count
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
+                                NavigationLink {
+                                    PaperViewerScreen(
+                                        paper: paper,
+                                        subject: subject,
+                                        school: school
+                                    )
+                                } label: {
+                                    PaperLibraryCard(
+                                        paper: paper,
+                                        flaggedCount: flaggedQuestions.filter {
+                                            $0.paperID == paper.id && $0.deletedAt == nil
+                                        }.count
+                                    )
+                                }
+                                .buttonStyle(.plain)
 
+                                HStack(spacing: 12) {
                                     Toggle(
                                         "Completed",
                                         isOn: completionBinding(for: paper)
                                     )
                                     .toggleStyle(.checkbox)
-                                    .padding(.leading, 18)
-                                    .padding(.bottom, 16)
+
+                                    Spacer(minLength: 0)
+
+                                    PaperScoreEditor(
+                                        paper: paper,
+                                        errorMessage: $deletionError,
+                                        style: .compact
+                                    )
                                 }
+                                .padding(.horizontal, 12)
+                                .padding(.top, 4)
 
                                 VStack(alignment: .leading, spacing: 10) {
                                     Button {
@@ -293,7 +301,9 @@ struct SchoolLibraryView: View {
         guard let paper = paperToDelete else {
             return
         }
-        let relatedQuestions = flaggedQuestions.filter { $0.paperID == paper.id }
+        let relatedQuestions = flaggedQuestions.filter {
+            $0.paperID == paper.id && $0.deletedAt == nil
+        }
         let oldPaperDeletedAt = paper.deletedAt
         let questionSnapshots = relatedQuestions.map { ($0, $0.deletedAt) }
         let deletedAt = Date.now

@@ -128,6 +128,9 @@ struct LocalFileStore {
             paper.questionPDFRelativePath,
             paper.solutionsPDFRelativePath
         ]
+        if let combinedPath = paper.combinedPDFRelativePath {
+            relativePaths.append(combinedPath)
+        }
         for question in flaggedQuestions {
             relativePaths.append(question.questionImageRelativePath)
             if let solutionPath = question.solutionImageRelativePath {

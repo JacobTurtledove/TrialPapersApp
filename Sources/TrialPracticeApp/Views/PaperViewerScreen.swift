@@ -271,9 +271,13 @@ struct PaperViewerScreen: View {
     }
 
     private func fileURL(for relativePath: String) -> URL? {
-        guard let rootURL = appState.rootFolderURL else { return nil }
-        let url = rootURL.appending(path: relativePath)
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        guard
+            let rootURL = appState.rootFolderURL,
+            let url = try? StoredFilePath(relativePath).url(relativeTo: rootURL),
+            FileManager.default.fileExists(atPath: url.path)
+        else {
+            return nil
+        }
         return url
     }
 

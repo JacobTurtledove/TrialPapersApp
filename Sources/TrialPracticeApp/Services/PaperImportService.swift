@@ -62,16 +62,33 @@ struct PaperImportService {
         }
 
         var createdURLs: [URL] = []
+        var temporaryDirectories: [URL] = []
+        defer {
+            for url in temporaryDirectories {
+                try? FileManager.default.removeItem(at: url)
+            }
+        }
+
         do {
             switch request.mode {
             case .separate:
-                guard let questionDocument = PDFDocument(url: request.questionPDFURL) else {
+                let localQuestionURL = try readableLocalCopy(
+                    of: request.questionPDFURL,
+                    filename: "questions.pdf"
+                )
+                temporaryDirectories.append(localQuestionURL.deletingLastPathComponent())
+                guard let questionDocument = PDFDocument(url: localQuestionURL) else {
                     throw ImportError.unreadablePDF("The question paper")
                 }
                 guard let solutionsURL = request.solutionsPDFURL else {
                     throw ImportError.missingSolutionsPDF
                 }
-                guard let solutionsDocument = PDFDocument(url: solutionsURL) else {
+                let localSolutionsURL = try readableLocalCopy(
+                    of: solutionsURL,
+                    filename: "solutions.pdf"
+                )
+                temporaryDirectories.append(localSolutionsURL.deletingLastPathComponent())
+                guard let solutionsDocument = PDFDocument(url: localSolutionsURL) else {
                     throw ImportError.unreadablePDF("The solutions paper")
                 }
                 let output = PDFDocument()
@@ -83,11 +100,16 @@ struct PaperImportService {
                 createdURLs.append(combinedDestination)
 
             case .combined:
-                guard PDFDocument(url: request.questionPDFURL) != nil else {
+                let localCombinedURL = try readableLocalCopy(
+                    of: request.questionPDFURL,
+                    filename: "combined.pdf"
+                )
+                temporaryDirectories.append(localCombinedURL.deletingLastPathComponent())
+                guard PDFDocument(url: localCombinedURL) != nil else {
                     throw ImportError.unreadablePDF("The combined paper")
                 }
                 try FileManager.default.copyItem(
-                    at: request.questionPDFURL,
+                    at: localCombinedURL,
                     to: combinedDestination
                 )
                 createdURLs.append(combinedDestination)
@@ -136,6 +158,61 @@ struct PaperImportService {
                 throw ImportError.unreadablePDF("The source paper")
             }
             output.insert(page, at: output.pageCount)
+        }
+    }
+
+    private func readableLocalCopy(of sourceURL: URL, filename: String) throws -> URL {
+        let fileManager = FileManager.default
+        let temporaryDirectory = fileManager.temporaryDirectory.appending(
+            path: "TrialPracticeAppImport-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        let temporaryURL = temporaryDirectory.appending(path: filename)
+
+        do {
+            try fileManager.createDirectory(
+                at: temporaryDirectory,
+                withIntermediateDirectories: true
+            )
+            try coordinatedCopy(from: sourceURL, to: temporaryURL)
+            return temporaryURL
+        } catch {
+            try? fileManager.removeItem(at: temporaryDirectory)
+            throw error
+        }
+    }
+
+    private func coordinatedCopy(from sourceURL: URL, to destinationURL: URL) throws {
+        let didStartAccess = sourceURL.startAccessingSecurityScopedResource()
+        defer {
+            if didStartAccess {
+                sourceURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        var coordinationError: NSError?
+        var copyResult: Result<Void, Error>?
+
+        coordinator.coordinate(
+            readingItemAt: sourceURL,
+            options: [],
+            error: &coordinationError
+        ) { readableURL in
+            do {
+                try FileManager.default.copyItem(at: readableURL, to: destinationURL)
+                copyResult = .success(())
+            } catch {
+                copyResult = .failure(error)
+            }
+        }
+
+        if let copyResult {
+            try copyResult.get()
+        } else if let coordinationError {
+            throw coordinationError
+        } else {
+            throw CocoaError(.fileReadUnknown)
         }
     }
 

@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 struct PaperLibraryCard: View {
@@ -22,6 +23,9 @@ struct PaperLibraryCard: View {
 
             HStack {
                 Label("\(flaggedCount)", systemImage: "flag")
+                if let score = paper.score {
+                    Label("\(score)", systemImage: "number.circle")
+                }
                 Spacer()
             }
             .font(.callout)
@@ -38,5 +42,170 @@ struct PaperLibraryCard: View {
                 .stroke(.separator.opacity(0.55), lineWidth: 1)
         }
         .contentShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
+
+enum PaperScoreEditorStyle {
+    case compact
+    case regular
+}
+
+struct PaperScoreEditor: View {
+    @Environment(\.modelContext) private var modelContext
+
+    let paper: Paper
+    @Binding var errorMessage: String?
+    var style: PaperScoreEditorStyle = .regular
+
+    @State private var scoreText = ""
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if style == .compact {
+                Image(systemName: "number.circle")
+                    .foregroundStyle(.secondary)
+                    .help("Score")
+            } else {
+                Label("Score", systemImage: "number.circle")
+                    .foregroundStyle(.secondary)
+            }
+
+            TextField("Score", text: $scoreText)
+                .textFieldStyle(.roundedBorder)
+                .font(.body.monospacedDigit())
+                .frame(width: style == .compact ? 62 : 76)
+                .focused($isFocused)
+                .onSubmit {
+                    saveScore()
+                }
+
+            if paper.score != nil || !scoreText.isEmpty {
+                Button {
+                    clearScore()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Clear score")
+            }
+        }
+        .onAppear {
+            syncScoreText()
+        }
+        .onChange(of: paper.score) {
+            if !isFocused {
+                syncScoreText()
+            }
+        }
+        .onChange(of: isFocused) {
+            if !isFocused {
+                saveScore()
+            }
+        }
+    }
+
+    private func clearScore() {
+        scoreText = ""
+        saveScore()
+    }
+
+    private func saveScore() {
+        let trimmed = scoreText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let newScore: Int?
+        if trimmed.isEmpty {
+            newScore = nil
+        } else if let parsed = Int(trimmed), parsed >= 0 {
+            newScore = parsed
+        } else {
+            syncScoreText()
+            errorMessage = "Score must be a whole number."
+            return
+        }
+
+        guard paper.score != newScore else {
+            scoreText = newScore.map(String.init) ?? ""
+            return
+        }
+
+        let oldScore = paper.score
+        paper.score = newScore
+        do {
+            try modelContext.save()
+            scoreText = newScore.map(String.init) ?? ""
+        } catch {
+            paper.score = oldScore
+            modelContext.rollback()
+            syncScoreText()
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func syncScoreText() {
+        scoreText = paper.score.map(String.init) ?? ""
+    }
+}
+
+struct PaperListRow: View {
+    let paper: Paper
+    let subject: Subject
+    let school: School?
+    let flaggedCount: Int
+    @Binding var errorMessage: String?
+    let completionBinding: Binding<Bool>
+
+    var body: some View {
+        HStack(spacing: 14) {
+            NavigationLink {
+                PaperViewerScreen(
+                    paper: paper,
+                    subject: subject,
+                    school: school
+                )
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "doc.richtext.fill")
+                        .font(.title2)
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.tint)
+                        .frame(width: 30)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(paper.year) Trial Paper")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+
+                        Text(school?.displayName ?? "Unknown School")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Label("\(flaggedCount)", systemImage: "flag")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Toggle("Completed", isOn: completionBinding)
+                .toggleStyle(.checkbox)
+
+            PaperScoreEditor(
+                paper: paper,
+                errorMessage: $errorMessage,
+                style: .compact
+            )
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(.separator.opacity(0.5), lineWidth: 1)
+        }
     }
 }

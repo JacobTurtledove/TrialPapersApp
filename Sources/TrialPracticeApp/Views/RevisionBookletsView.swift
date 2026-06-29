@@ -186,8 +186,14 @@ struct RevisionBookletsView: View {
         defer { isExporting = false }
 
         do {
-            let entries = filteredQuestions.map { question in
-                RevisionBookletEntry(
+            let entries = try filteredQuestions.map { question in
+                let questionImageURL = try StoredFilePath(
+                    question.questionImageRelativePath
+                ).url(relativeTo: rootURL)
+                let solutionImageURL = try question.solutionImageRelativePath.map {
+                    try StoredFilePath($0).url(relativeTo: rootURL)
+                }
+                return RevisionBookletEntry(
                     schoolName: school(for: question)?.displayName ?? "Unknown School",
                     year: question.year,
                     questionNumber: question.questionNumber,
@@ -196,12 +202,8 @@ struct RevisionBookletsView: View {
                     priority: question.priority,
                     topic: question.topic,
                     marksAvailable: question.marksAvailable,
-                    questionImageURL: rootURL.appending(
-                        path: question.questionImageRelativePath
-                    ),
-                    solutionImageURL: question.solutionImageRelativePath.map {
-                        rootURL.appending(path: $0)
-                    }
+                    questionImageURL: questionImageURL,
+                    solutionImageURL: solutionImageURL
                 )
             }
             try RevisionBookletService().export(

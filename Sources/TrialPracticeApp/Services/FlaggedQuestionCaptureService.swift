@@ -167,15 +167,17 @@ struct FlaggedQuestionCaptureService {
 
         let baseName = "\(subject.filenameValue)_\(school.filenameValue)_\(year)_\(questionToken)"
         var duplicateIndex = 1
-        var questionFilename = "\(baseName).png"
-        while FileManager.default.fileExists(
-            atPath: directoryURL.appending(path: questionFilename).path
+        while imageFilesExist(
+            baseName: baseName,
+            duplicateIndex: duplicateIndex,
+            hasSolution: solutionPNG != nil,
+            in: directoryURL
         ) {
             duplicateIndex += 1
-            questionFilename = "\(baseName)_\(duplicateIndex).png"
         }
 
         let suffix = duplicateIndex == 1 ? "" : "_\(duplicateIndex)"
+        let questionFilename = "\(baseName)\(suffix).png"
         let solutionFilename = "\(baseName)\(suffix)_sol.png"
         let questionRelativePath = "\(directoryPath)/\(questionFilename)"
         let solutionRelativePath = solutionPNG.map { _ in
@@ -214,15 +216,32 @@ struct FlaggedQuestionCaptureService {
         ].compactMap { $0 }
 
         for path in Set(paths) {
-            let url = rootURL.appending(path: path).standardizedFileURL
-            let rootPath = rootURL.standardizedFileURL.path
-            guard url.path.hasPrefix(rootPath + "/") else {
-                throw CocoaError(.fileWriteNoPermission)
-            }
+            let url = try StoredFilePath(path).url(relativeTo: rootURL)
             if FileManager.default.fileExists(atPath: url.path) {
                 try FileManager.default.removeItem(at: url)
             }
         }
+    }
+
+    private func imageFilesExist(
+        baseName: String,
+        duplicateIndex: Int,
+        hasSolution: Bool,
+        in directoryURL: URL
+    ) -> Bool {
+        let suffix = duplicateIndex == 1 ? "" : "_\(duplicateIndex)"
+        let questionFilename = "\(baseName)\(suffix).png"
+        if FileManager.default.fileExists(
+            atPath: directoryURL.appending(path: questionFilename).path
+        ) {
+            return true
+        }
+
+        guard hasSolution else { return false }
+        let solutionFilename = "\(baseName)\(suffix)_sol.png"
+        return FileManager.default.fileExists(
+            atPath: directoryURL.appending(path: solutionFilename).path
+        )
     }
 
     private func normalizedQuestionToken(_ rawValue: String) throws -> String {

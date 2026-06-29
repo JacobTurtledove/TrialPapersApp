@@ -194,8 +194,10 @@ struct SubjectBinView: View {
             return
         }
 
-        let relatedQuestions = questions.filter { $0.paperID == paper.id }
         let oldPaperDeletedAt = paper.deletedAt
+        let relatedQuestions = questions.filter {
+            $0.paperID == paper.id && $0.deletedAt == oldPaperDeletedAt
+        }
         let questionSnapshots = relatedQuestions.map { ($0, $0.deletedAt) }
         paper.deletedAt = nil
         relatedQuestions.forEach { $0.deletedAt = nil }

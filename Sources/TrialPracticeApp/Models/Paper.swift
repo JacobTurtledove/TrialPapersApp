@@ -14,6 +14,7 @@ final class Paper {
     var solutionsStartPage: Int?
     var hasSolutions: Bool?
     var isCompleted: Bool = false
+    var score: Int?
     var createdAt: Date
     var deletedAt: Date?
 
@@ -33,6 +34,7 @@ final class Paper {
         solutionsStartPage: Int? = nil,
         hasSolutions: Bool? = nil,
         isCompleted: Bool = false,
+        score: Int? = nil,
         createdAt: Date = .now,
         deletedAt: Date? = nil
     ) {
@@ -47,6 +49,7 @@ final class Paper {
         self.solutionsStartPage = solutionsStartPage
         self.hasSolutions = hasSolutions
         self.isCompleted = isCompleted
+        self.score = score
         self.createdAt = createdAt
         self.deletedAt = deletedAt
     }

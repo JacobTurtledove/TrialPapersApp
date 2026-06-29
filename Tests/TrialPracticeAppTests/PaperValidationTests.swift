@@ -71,6 +71,22 @@ struct PaperValidationTests {
     }
 
     @Test
+    func papersCanStoreScores() {
+        let paper = Paper(
+            subjectID: UUID(),
+            schoolID: UUID(),
+            year: "2025",
+            questionPDFRelativePath: "paper.pdf",
+            solutionsPDFRelativePath: "paper.pdf",
+            score: 82
+        )
+
+        #expect(paper.score == 82)
+        paper.score = nil
+        #expect(paper.score == nil)
+    }
+
+    @Test
     func createsSpecificationCompliantPaperFilenames() {
         let subject = Subject(
             displayName: "Maths Advanced",

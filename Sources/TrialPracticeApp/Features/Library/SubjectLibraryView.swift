@@ -3,6 +3,27 @@ import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
+private enum SubjectPaperDisplayMode: String, CaseIterable, Identifiable {
+    case schoolFolders
+    case list
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .schoolFolders: "Folders"
+        case .list: "List"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .schoolFolders: "folder"
+        case .list: "list.bullet"
+        }
+    }
+}
+
 struct SubjectLibraryView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var appState: AppState
@@ -16,8 +37,11 @@ struct SubjectLibraryView: View {
     @State private var exportMessage: String?
     @State private var exportedCSVURL: URL?
     @State private var crestErrorMessage: String?
+    @State private var paperErrorMessage: String?
     @State private var curatedCrests: [UUID: NSImage] = [:]
     @State private var curatedCrestSources: [UUID: URL] = [:]
+    @AppStorage("library.subjectPaperDisplayMode") private var paperDisplayModeRawValue =
+        SubjectPaperDisplayMode.schoolFolders.rawValue
 
     private let columns = [
         GridItem(.adaptive(minimum: 190, maximum: 240), spacing: 20)
@@ -41,9 +65,20 @@ struct SubjectLibraryView: View {
         }
     }
 
+    private var displayMode: SubjectPaperDisplayMode {
+        SubjectPaperDisplayMode(rawValue: paperDisplayModeRawValue) ?? .schoolFolders
+    }
+
+    private var displayModeBinding: Binding<SubjectPaperDisplayMode> {
+        Binding(
+            get: { displayMode },
+            set: { paperDisplayModeRawValue = $0.rawValue }
+        )
+    }
+
     var body: some View {
         Group {
-            if schoolFolders.isEmpty {
+            if subjectPapers.isEmpty {
                 ContentUnavailableView {
                     Label("No Schools Yet", systemImage: "folder")
                 } description: {
@@ -62,6 +97,30 @@ struct SubjectLibraryView: View {
                         }
                         .buttonStyle(.bordered)
                     }
+                }
+            } else if displayMode == .list {
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(subjectPapers) { paper in
+                            PaperListRow(
+                                paper: paper,
+                                subject: subject,
+                                school: school(for: paper),
+                                flaggedCount: flaggedCount(for: paper),
+                                errorMessage: $paperErrorMessage,
+                                completionBinding: completionBinding(for: paper)
+                            )
+                            .contextMenu {
+                                Button("Show in Finder") {
+                                    reveal(paper)
+                                }
+                                Button("Export PDF") {
+                                    exportPaper(paper)
+                                }
+                            }
+                        }
+                    }
+                    .padding(28)
                 }
             } else {
                 ScrollView {
@@ -121,6 +180,16 @@ struct SubjectLibraryView: View {
         .navigationTitle(subject.displayName)
         .toolbar {
             HStack {
+                Picker("Paper display", selection: displayModeBinding) {
+                    ForEach(SubjectPaperDisplayMode.allCases) { mode in
+                        Label(mode.title, systemImage: mode.systemImage)
+                            .tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 180)
+
                 Button {
                     exportSubject()
                 } label: {
@@ -182,6 +251,27 @@ struct SubjectLibraryView: View {
         } message: {
             Text(crestErrorMessage ?? "")
         }
+        .alert(
+            "Paper Error",
+            isPresented: Binding(
+                get: { paperErrorMessage != nil },
+                set: { if !$0 { paperErrorMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(paperErrorMessage ?? "")
+        }
+    }
+
+    private func school(for paper: Paper) -> School? {
+        schools.first { $0.id == paper.schoolID }
+    }
+
+    private func flaggedCount(for paper: Paper) -> Int {
+        flaggedQuestions.filter {
+            $0.paperID == paper.id && $0.deletedAt == nil
+        }.count
     }
 
     private func revealSchoolFolder(_ school: School) {
@@ -205,6 +295,38 @@ struct SubjectLibraryView: View {
         }
     }
 
+    private func reveal(_ paper: Paper) {
+        guard let rootURL = appState.rootFolderURL else {
+            paperErrorMessage = "The app storage folder is unavailable."
+            return
+        }
+        do {
+            try FinderRevealService.revealStoredItem(
+                relativePath: paper.primaryPDFRelativePath,
+                rootURL: rootURL
+            )
+        } catch {
+            paperErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func completionBinding(for paper: Paper) -> Binding<Bool> {
+        Binding(
+            get: { paper.isCompleted },
+            set: { isCompleted in
+                let oldValue = paper.isCompleted
+                paper.isCompleted = isCompleted
+                do {
+                    try modelContext.save()
+                } catch {
+                    paper.isCompleted = oldValue
+                    modelContext.rollback()
+                    paperErrorMessage = error.localizedDescription
+                }
+            }
+        )
+    }
+
     private func chooseCrest(for school: School) {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.image]
@@ -222,6 +344,7 @@ struct SubjectLibraryView: View {
 
         let oldData = school.crestImageData
         let oldSourcePageURL = school.crestSourcePageURL
+        let oldLookupAttemptedAt = school.crestLookupAttemptedAt
         do {
             school.crestImageData = try SchoolCrestService().pngData(from: sourceURL)
             school.crestSourcePageURL = nil
@@ -230,6 +353,7 @@ struct SubjectLibraryView: View {
         } catch {
             school.crestImageData = oldData
             school.crestSourcePageURL = oldSourcePageURL
+            school.crestLookupAttemptedAt = oldLookupAttemptedAt
             modelContext.rollback()
             crestErrorMessage = error.localizedDescription
         }
@@ -346,6 +470,33 @@ struct SubjectLibraryView: View {
                 to: destinationURL
             )
             exportMessage = "School folder exported successfully."
+        } catch {
+            exportedCSVURL = nil
+            exportMessage = error.localizedDescription
+        }
+    }
+
+    private func exportPaper(_ paper: Paper) {
+        guard let rootURL = appState.rootFolderURL else {
+            exportMessage = "The app storage folder is unavailable."
+            return
+        }
+        let savePanel = NSSavePanel()
+        savePanel.allowedContentTypes = [.pdf]
+        savePanel.canCreateDirectories = true
+        let storedPath = paper.primaryPDFRelativePath
+        savePanel.nameFieldStringValue = (storedPath as NSString).lastPathComponent
+
+        guard savePanel.runModal() == .OK, let destinationURL = savePanel.url else {
+            return
+        }
+
+        do {
+            exportedCSVURL = try LibraryExportService(rootURL: rootURL).exportPaper(
+                paper,
+                to: destinationURL
+            )
+            exportMessage = "PDF exported successfully."
         } catch {
             exportedCSVURL = nil
             exportMessage = error.localizedDescription

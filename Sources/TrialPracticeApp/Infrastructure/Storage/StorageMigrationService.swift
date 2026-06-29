@@ -67,8 +67,9 @@ struct StorageMigrationService {
         for school in schools {
             guard let path = school.crestImageRelativePath else { continue }
 
-            let fileURL = rootURL.appending(path: path).standardizedFileURL
-            if fileManager.fileExists(atPath: fileURL.path),
+            let fileURL = try? StoredFilePath(path).url(relativeTo: rootURL)
+            if let fileURL,
+               fileManager.fileExists(atPath: fileURL.path),
                school.crestImageData == nil,
                school.crestSourcePageURL == nil {
                 school.crestImageData = try crestService.pngData(

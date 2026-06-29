@@ -8,7 +8,8 @@ struct StoredImage: View {
     var body: some View {
         if
             let rootURL,
-            let image = NSImage(contentsOf: rootURL.appending(path: relativePath))
+            let url = try? StoredFilePath(relativePath).url(relativeTo: rootURL),
+            let image = NSImage(contentsOf: url)
         {
             Image(nsImage: image)
                 .resizable()

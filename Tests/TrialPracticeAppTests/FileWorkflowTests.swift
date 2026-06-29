@@ -70,6 +70,36 @@ struct FileWorkflowTests {
     }
 
     @Test
+    func libraryExportingToStoredSourceDoesNotDeleteIt() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let relativePath = "Papers/Physics/ExampleSchool/paper.pdf"
+        let storedURL = rootURL.appending(path: relativePath)
+        try FileManager.default.createDirectory(
+            at: storedURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("paper".utf8).write(to: storedURL)
+
+        let paper = Paper(
+            subjectID: UUID(),
+            schoolID: UUID(),
+            year: "2025",
+            questionPDFRelativePath: relativePath,
+            solutionsPDFRelativePath: relativePath
+        )
+
+        let exportedURL = try LibraryExportService(rootURL: rootURL).exportPaper(
+            paper,
+            to: storedURL
+        )
+
+        #expect(exportedURL == storedURL)
+        #expect(try Data(contentsOf: storedURL) == Data("paper".utf8))
+    }
+
+    @Test
     func libraryExportRejectsAbsoluteStoredPath() throws {
         let rootURL = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: rootURL) }
@@ -198,6 +228,39 @@ struct FileWorkflowTests {
         let secondResult = try service.migrateIfNeeded(rootURL: rootURL, schools: [school])
         #expect(!secondResult.didChangeModels)
         #expect(secondResult.latestCompletedVersion == nil)
+    }
+
+    @Test
+    func storageMigrationIgnoresLegacyCrestPathsOutsideRoot() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let outsideURL = rootURL
+            .deletingLastPathComponent()
+            .appending(path: "\(rootURL.lastPathComponent)-outside.png")
+        defer { try? FileManager.default.removeItem(at: outsideURL) }
+        try makePNG(label: "Outside", at: outsideURL)
+
+        let suiteName = "StorageMigrationServiceTests-\(UUID().uuidString)"
+        let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+        defer {
+            userDefaults.removePersistentDomain(forName: suiteName)
+        }
+
+        let school = School(
+            displayName: "Example School",
+            filenameValue: "ExampleSchool",
+            crestImageRelativePath: "../\(outsideURL.lastPathComponent)"
+        )
+        let service = StorageMigrationService(userDefaults: userDefaults)
+
+        let result = try service.migrateIfNeeded(rootURL: rootURL, schools: [school])
+
+        #expect(result.didChangeModels)
+        #expect(result.latestCompletedVersion == .legacySchoolCrestsEmbeddedData)
+        #expect(school.crestImageData == nil)
+        #expect(school.crestImageRelativePath == nil)
+        #expect(FileManager.default.fileExists(atPath: outsideURL.path))
     }
 
     @MainActor
@@ -473,6 +536,47 @@ struct FileWorkflowTests {
     }
 
     @Test
+    func deletingPaperAlsoStagesCombinedPDFPath() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let paperDirectory = rootURL.appending(
+            path: "Papers/MathsAdvanced/ExampleSchool",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: paperDirectory,
+            withIntermediateDirectories: true
+        )
+        let questionPath = "Papers/MathsAdvanced/ExampleSchool/questions.pdf"
+        let solutionsPath = "Papers/MathsAdvanced/ExampleSchool/solutions.pdf"
+        let combinedPath = "Papers/MathsAdvanced/ExampleSchool/combined.pdf"
+        try Data("question".utf8).write(to: rootURL.appending(path: questionPath))
+        try Data("solution".utf8).write(to: rootURL.appending(path: solutionsPath))
+        try Data("combined".utf8).write(to: rootURL.appending(path: combinedPath))
+
+        let paper = Paper(
+            subjectID: UUID(),
+            schoolID: UUID(),
+            year: "2025",
+            questionPDFRelativePath: questionPath,
+            solutionsPDFRelativePath: solutionsPath,
+            combinedPDFRelativePath: combinedPath
+        )
+        let transaction = try LocalFileStore(rootURL: rootURL).stageDeletion(
+            for: paper,
+            flaggedQuestions: []
+        )
+
+        #expect(!FileManager.default.fileExists(atPath: rootURL.appending(path: questionPath).path))
+        #expect(!FileManager.default.fileExists(atPath: rootURL.appending(path: solutionsPath).path))
+        #expect(!FileManager.default.fileExists(atPath: rootURL.appending(path: combinedPath).path))
+
+        try transaction.rollback()
+        #expect(try Data(contentsOf: rootURL.appending(path: combinedPath)) == Data("combined".utf8))
+    }
+
+    @Test
     func stagedDeletionCanRestoreFilesAfterMetadataFailure() throws {
         let rootURL = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: rootURL) }
@@ -587,6 +691,64 @@ struct FileWorkflowTests {
             try Data(contentsOf: rootURL.appending(path: first.questionRelativePath)) ==
                 Data("question-one".utf8)
         )
+    }
+
+    @Test
+    func savingFlaggedQuestionAvoidsExistingSolutionFilename() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let service = FlaggedQuestionCaptureService(rootURL: rootURL)
+        let subject = Subject(displayName: "Maths Advanced", filenameValue: "MathsAdvanced")
+        let school = School(displayName: "Example School", filenameValue: "ExampleSchool")
+        let directoryPath = "Flagged Questions/MathsAdvanced/Mistakes/2025"
+        let directoryURL = rootURL.appending(path: directoryPath, directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        let orphanSolutionURL = directoryURL.appending(
+            path: "MathsAdvanced_ExampleSchool_2025_Q14a_sol.png"
+        )
+        try Data("orphan-solution".utf8).write(to: orphanSolutionURL)
+
+        let saved = try service.saveImages(
+            questionPNG: Data("question".utf8),
+            solutionPNG: Data("solution".utf8),
+            subject: subject,
+            school: school,
+            year: "2025",
+            questionNumber: "14a",
+            category: .mistake
+        )
+
+        #expect(saved.questionRelativePath.hasSuffix("_Q14a_2.png"))
+        #expect(saved.solutionRelativePath?.hasSuffix("_Q14a_2_sol.png") == true)
+        #expect(try Data(contentsOf: orphanSolutionURL) == Data("orphan-solution".utf8))
+    }
+
+    @Test
+    func deletingFlaggedQuestionImagesRejectsEscapingPaths() throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+
+        let outsideURL = rootURL
+            .deletingLastPathComponent()
+            .appending(path: "\(rootURL.lastPathComponent)-outside.png")
+        defer { try? FileManager.default.removeItem(at: outsideURL) }
+        try Data("outside".utf8).write(to: outsideURL)
+
+        let question = FlaggedQuestion(
+            paperID: UUID(),
+            subjectID: UUID(),
+            schoolID: UUID(),
+            year: "2025",
+            questionNumber: "1",
+            category: .mistake,
+            questionImageRelativePath: "../\(outsideURL.lastPathComponent)"
+        )
+
+        #expect(throws: StoredFilePath.ValidationError.parentDirectoryComponent) {
+            try FlaggedQuestionCaptureService(rootURL: rootURL).deleteImages(for: question)
+        }
+        #expect(try Data(contentsOf: outsideURL) == Data("outside".utf8))
     }
 
     @Test

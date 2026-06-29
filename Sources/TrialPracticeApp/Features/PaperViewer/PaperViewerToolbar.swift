@@ -35,6 +35,12 @@ extension PaperViewerScreen {
             Toggle("Completed", isOn: completionBinding)
                 .toggleStyle(.checkbox)
 
+            PaperScoreEditor(
+                paper: paper,
+                errorMessage: $paperUpdateError,
+                style: .compact
+            )
+
             Button {
                 beginFlagging()
             } label: {
