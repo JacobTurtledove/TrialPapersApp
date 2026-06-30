@@ -2,6 +2,12 @@ import Combine
 import Foundation
 import SwiftData
 
+enum THSCImportListingState: Equatable {
+    case queued
+    case importing
+    case failed
+}
+
 @MainActor
 final class THSCImportCoordinator: ObservableObject {
     @Published private(set) var isImporting = false
@@ -9,6 +15,9 @@ final class THSCImportCoordinator: ObservableObject {
     @Published private(set) var totalCount = 0
     @Published private(set) var statusMessage: String?
     @Published private(set) var errorMessage: String?
+    @Published private(set) var queuedListingIDs: Set<String> = []
+    @Published private(set) var activeListingID: String?
+    @Published private(set) var failedListingIDs: Set<String> = []
 
     private var importTask: Task<Void, Never>?
     private let service = THSCImportService()
@@ -29,6 +38,9 @@ final class THSCImportCoordinator: ObservableObject {
         totalCount = listings.count
         statusMessage = nil
         errorMessage = nil
+        queuedListingIDs = Set(listings.map(\.id))
+        activeListingID = nil
+        failedListingIDs = []
 
         importTask = Task {
             var importedCount = 0
@@ -40,7 +52,14 @@ final class THSCImportCoordinator: ObservableObject {
 
             for listing in listings {
                 guard !Task.isCancelled else { break }
-                defer { completedCount += 1 }
+                activeListingID = listing.id
+                queuedListingIDs.remove(listing.id)
+                defer {
+                    completedCount += 1
+                    if activeListingID == listing.id {
+                        activeListingID = nil
+                    }
+                }
                 guard
                     !importedIdentifiers.contains(listing.id),
                     !importedIdentifiers.contains(listing.legacyIdentifier)
@@ -98,11 +117,14 @@ final class THSCImportCoordinator: ObservableObject {
                     if let importedFiles {
                         PaperImportService(rootURL: rootURL).discardImportedFiles(importedFiles)
                     }
+                    failedListingIDs.insert(listing.id)
                     failures.append("\(listing.title): \(error.localizedDescription)")
                 }
             }
 
             isImporting = false
+            queuedListingIDs = []
+            activeListingID = nil
             statusMessage =
                 "Imported \(importedCount) complete paper\(importedCount == 1 ? "" : "s")."
             errorMessage = failures.isEmpty ? nil : failures.joined(separator: "\n")
@@ -112,6 +134,19 @@ final class THSCImportCoordinator: ObservableObject {
 
     func clearError() {
         errorMessage = nil
+    }
+
+    func importState(for listing: THSCPaperListing) -> THSCImportListingState? {
+        if activeListingID == listing.id {
+            return .importing
+        }
+        if queuedListingIDs.contains(listing.id) {
+            return .queued
+        }
+        if failedListingIDs.contains(listing.id) {
+            return .failed
+        }
+        return nil
     }
 
     private static func schoolKey(_ name: String) -> String {

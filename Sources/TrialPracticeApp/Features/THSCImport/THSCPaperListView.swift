@@ -112,6 +112,7 @@ extension THSCImportView {
     func paperRow(_ paper: THSCPaperListing) -> some View {
         let imported = isImported(paper)
         let conflict = hasLocalPaperConflict(paper)
+        let importState = importCoordinator.importState(for: paper)
 
         return HStack(spacing: 12) {
             Button {
@@ -132,13 +133,27 @@ extension THSCImportView {
                 if imported {
                     Label("Imported", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
+                } else if importState == .importing {
+                    Label {
+                        Text("Importing")
+                    } icon: {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                    .foregroundStyle(.secondary)
+                } else if importState == .queued {
+                    Label("Queued", systemImage: "clock")
+                        .foregroundStyle(.secondary)
+                } else if importState == .failed {
+                    Label("Failed", systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.red)
                 } else if conflict {
                     Text("Already in library")
                         .foregroundStyle(.secondary)
                 }
             }
             .font(.caption)
-            .frame(width: 125, alignment: .trailing)
+            .frame(width: 135, alignment: .trailing)
         }
         .padding(.leading, 30)
         .padding(.vertical, 6)
