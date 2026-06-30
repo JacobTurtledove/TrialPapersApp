@@ -7,6 +7,7 @@ struct AddPaperView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var navigationCoordinator: AppNavigationCoordinator
+    @EnvironmentObject private var paperImportProgressStore: PaperImportProgressStore
 
     @Query(sort: \Subject.displayName) private var subjects: [Subject]
     @Query(sort: \School.displayName) private var schools: [School]
@@ -61,10 +62,7 @@ struct AddPaperView: View {
                 Text("Add Trial Paper")
                     .font(.title2.bold())
                 Spacer()
-                Button("Cancel") {
-                    importTask?.cancel()
-                    dismiss()
-                }
+                Button("Cancel") { dismiss() }
                 .disabled(isImporting)
             }
             .padding(24)
@@ -214,9 +212,6 @@ struct AddPaperView: View {
                 solutionsPDFURL = nil
             }
         }
-        .onDisappear {
-            importTask?.cancel()
-        }
     }
 
     private func handlePDFSelection(_ result: Result<[URL], Error>) {
@@ -284,6 +279,12 @@ struct AddPaperView: View {
         isImporting = true
         errorMessage = nil
         let importService = PaperImportService(rootURL: rootURL)
+        let importID = paperImportProgressStore.begin(
+            subjectID: subject.id,
+            schoolID: school.id,
+            schoolName: normalizedSchoolName,
+            year: validatedYear
+        )
         let request = PaperImportRequest(
             subjectFilenameValue: subject.filenameValue,
             schoolFilenameValue: school.filenameValue,
@@ -304,6 +305,7 @@ struct AddPaperView: View {
 
                 guard !Task.isCancelled else {
                     importService.discardImportedFiles(files)
+                    paperImportProgressStore.finish(importID)
                     isImporting = false
                     return
                 }
@@ -326,16 +328,18 @@ struct AddPaperView: View {
                     )
                 )
                 try modelContext.save()
+                paperImportProgressStore.finish(importID)
                 isImporting = false
-                dismiss()
             } catch {
                 modelContext.rollback()
                 if let importedFiles {
                     importService.discardImportedFiles(importedFiles)
                 }
+                paperImportProgressStore.fail(importID, error: error)
                 errorMessage = error.localizedDescription
                 isImporting = false
             }
         }
+        dismiss()
     }
 }

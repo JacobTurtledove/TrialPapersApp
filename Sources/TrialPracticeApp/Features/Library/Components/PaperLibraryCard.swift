@@ -45,6 +45,97 @@ struct PaperLibraryCard: View {
     }
 }
 
+struct ImportingPaperCard: View {
+    let year: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "doc.badge.clock")
+                    .font(.system(size: 36))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(year)
+                    .font(.title2.bold())
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("\(year) Trial Paper")
+                .font(.headline)
+                .foregroundStyle(.primary)
+
+            HStack {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Importing")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+
+            Spacer()
+                .frame(height: 24)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, minHeight: 165, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(.separator.opacity(0.55), lineWidth: 1)
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 14))
+        .redacted(reason: .placeholder)
+        .overlay(alignment: .bottomLeading) {
+            Label("Importing", systemImage: "arrow.triangle.2.circlepath")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 16)
+                .unredacted()
+        }
+    }
+}
+
+struct ImportingPaperListRow: View {
+    let importRecord: OptimisticPaperImport
+
+    var body: some View {
+        HStack(spacing: 14) {
+            HStack(spacing: 12) {
+                Image(systemName: "doc.badge.clock")
+                    .font(.title2)
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(importRecord.year) Trial Paper")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+
+                    Text(importRecord.schoolName)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 0)
+
+                ProgressView()
+                    .controlSize(.small)
+            }
+            .contentShape(Rectangle())
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(.separator.opacity(0.5), lineWidth: 1)
+        }
+    }
+}
+
 enum PaperScoreEditorStyle {
     case compact
     case regular

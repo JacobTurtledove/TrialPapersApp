@@ -130,6 +130,7 @@ struct MainNavigationView: View {
     @StateObject private var thscImportCoordinator = THSCImportCoordinator()
     @StateObject private var pdfViewportStore = PDFViewerViewportStore()
     @StateObject private var annotationSaveCoordinator = PDFAnnotationSaveCoordinator()
+    @StateObject private var paperImportProgressStore = PaperImportProgressStore()
 
     var body: some View {
         NavigationSplitView(columnVisibility: $navigationCoordinator.splitViewVisibility) {
@@ -169,6 +170,7 @@ struct MainNavigationView: View {
         .environmentObject(thscImportCoordinator)
         .environmentObject(pdfViewportStore)
         .environmentObject(annotationSaveCoordinator)
+        .environmentObject(paperImportProgressStore)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if thscImportCoordinator.isImporting {
                 THSCImportProgressBar(coordinator: thscImportCoordinator)
@@ -189,6 +191,21 @@ struct MainNavigationView: View {
             }
         } message: {
             Text(annotationSaveCoordinator.saveFailure?.message ?? "")
+        }
+        .alert(
+            "Paper Import Failed",
+            isPresented: Binding(
+                get: { paperImportProgressStore.failure != nil },
+                set: { if !$0 { paperImportProgressStore.failure = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {
+                paperImportProgressStore.failure = nil
+            }
+        } message: {
+            if let failure = paperImportProgressStore.failure {
+                Text("\(failure.paperTitle) could not be imported. \(failure.message)")
+            }
         }
         .background(WindowTitleSetter(title: AppBuild.windowTitle))
     }

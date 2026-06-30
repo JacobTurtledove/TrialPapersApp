@@ -28,6 +28,7 @@ struct SubjectLibraryView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var navigationCoordinator: AppNavigationCoordinator
+    @EnvironmentObject private var paperImportProgressStore: PaperImportProgressStore
     @Query(sort: \School.displayName) private var schools: [School]
     @Query(sort: \Paper.year, order: .reverse) private var papers: [Paper]
     @Query private var flaggedQuestions: [FlaggedQuestion]
@@ -51,6 +52,14 @@ struct SubjectLibraryView: View {
         papers.filter { $0.subjectID == subject.id && $0.deletedAt == nil }
     }
 
+    private var optimisticImports: [OptimisticPaperImport] {
+        paperImportProgressStore.imports(forSubjectID: subject.id)
+    }
+
+    private var hasVisiblePapers: Bool {
+        !subjectPapers.isEmpty || !optimisticImports.isEmpty
+    }
+
     private var activeFlaggedQuestions: [FlaggedQuestion] {
         let paperIDs = Set(subjectPapers.map(\.id))
         return flaggedQuestions.filter {
@@ -63,6 +72,23 @@ struct SubjectLibraryView: View {
             let matching = subjectPapers.filter { $0.schoolID == school.id }
             return matching.isEmpty ? nil : (school, matching)
         }
+    }
+
+    private var optimisticImportGroups: [(schoolID: UUID, schoolName: String, imports: [OptimisticPaperImport])] {
+        Dictionary(grouping: optimisticImports, by: \.schoolID)
+            .map { schoolID, imports in
+                (
+                    schoolID: schoolID,
+                    schoolName: imports.first?.schoolName ?? "New School",
+                    imports: imports.sorted { $0.startedAt < $1.startedAt }
+                )
+            }
+            .sorted { $0.schoolName.localizedCaseInsensitiveCompare($1.schoolName) == .orderedAscending }
+    }
+
+    private var optimisticImportGroupsForNewSchools: [(schoolID: UUID, schoolName: String, imports: [OptimisticPaperImport])] {
+        let existingSchoolIDs = Set(schoolFolders.map(\.school.id))
+        return optimisticImportGroups.filter { !existingSchoolIDs.contains($0.schoolID) }
     }
 
     private var displayMode: SubjectPaperDisplayMode {
@@ -78,7 +104,7 @@ struct SubjectLibraryView: View {
 
     var body: some View {
         Group {
-            if subjectPapers.isEmpty {
+            if !hasVisiblePapers {
                 ContentUnavailableView {
                     Label("No Schools Yet", systemImage: "folder")
                 } description: {
@@ -119,6 +145,9 @@ struct SubjectLibraryView: View {
                                 }
                             }
                         }
+                        ForEach(optimisticImports) { importRecord in
+                            ImportingPaperListRow(importRecord: importRecord)
+                        }
                     }
                     .padding(28)
                 }
@@ -134,7 +163,8 @@ struct SubjectLibraryView: View {
                             } label: {
                                 SchoolFolderCard(
                                     school: folder.school,
-                                    paperCount: folder.papers.count,
+                                    paperCount: folder.papers.count +
+                                        optimisticImportCount(for: folder.school),
                                     fallbackColor: subject.folderColor,
                                     curatedCrest: curatedCrests[folder.school.id]
                                 )
@@ -171,6 +201,13 @@ struct SubjectLibraryView: View {
                                     moveSchoolToBin(folder.school)
                                 }
                             }
+                        }
+                        ForEach(optimisticImportGroupsForNewSchools, id: \.schoolID) { group in
+                            ImportingSchoolFolderCard(
+                                schoolName: group.schoolName,
+                                paperCount: group.imports.count,
+                                fallbackColor: subject.folderColor
+                            )
                         }
                     }
                     .padding(28)
@@ -272,6 +309,13 @@ struct SubjectLibraryView: View {
         flaggedQuestions.filter {
             $0.paperID == paper.id && $0.deletedAt == nil
         }.count
+    }
+
+    private func optimisticImportCount(for school: School) -> Int {
+        paperImportProgressStore.imports(
+            forSubjectID: subject.id,
+            schoolID: school.id
+        ).count
     }
 
     private func revealSchoolFolder(_ school: School) {

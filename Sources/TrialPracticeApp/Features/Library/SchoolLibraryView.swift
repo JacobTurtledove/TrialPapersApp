@@ -7,6 +7,7 @@ struct SchoolLibraryView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var navigationCoordinator: AppNavigationCoordinator
+    @EnvironmentObject private var paperImportProgressStore: PaperImportProgressStore
     @Query(sort: \Paper.year, order: .reverse) private var allPapers: [Paper]
     @Query private var flaggedQuestions: [FlaggedQuestion]
     @Query private var importRecords: [THSCImportRecord]
@@ -31,6 +32,14 @@ struct SchoolLibraryView: View {
         }
     }
 
+    private var optimisticImports: [OptimisticPaperImport] {
+        paperImportProgressStore.imports(forSubjectID: subject.id, schoolID: school.id)
+    }
+
+    private var hasVisiblePapers: Bool {
+        !papers.isEmpty || !optimisticImports.isEmpty
+    }
+
     private var activeFlaggedQuestions: [FlaggedQuestion] {
         let paperIDs = Set(papers.map(\.id))
         return flaggedQuestions.filter {
@@ -40,7 +49,7 @@ struct SchoolLibraryView: View {
 
     var body: some View {
         Group {
-            if papers.isEmpty {
+            if !hasVisiblePapers {
                 ContentUnavailableView {
                     Label("No Papers", systemImage: "doc")
                 } description: {
@@ -156,6 +165,9 @@ struct SchoolLibraryView: View {
                                     paperToDelete = paper
                                 }
                             }
+                        }
+                        ForEach(optimisticImports) { importRecord in
+                            ImportingPaperCard(year: importRecord.year)
                         }
                     }
                     .padding(28)

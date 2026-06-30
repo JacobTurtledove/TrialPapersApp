@@ -42,3 +42,40 @@ struct SchoolFolderCard: View {
         .contentShape(RoundedRectangle(cornerRadius: 14))
     }
 }
+
+struct ImportingSchoolFolderCard: View {
+    let schoolName: String
+    let paperCount: Int
+    let fallbackColor: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Image(systemName: "folder.badge.plus")
+                .font(.system(size: 58))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(fallbackColor.opacity(0.75))
+                .frame(height: 64)
+
+            Text(schoolName)
+                .font(.headline)
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Importing \(paperCount) paper\(paperCount == 1 ? "" : "s")")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, minHeight: 165, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(.separator.opacity(0.55), lineWidth: 1)
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
