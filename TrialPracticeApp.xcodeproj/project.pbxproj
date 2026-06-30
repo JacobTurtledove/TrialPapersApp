@@ -98,6 +98,7 @@
 		A10000000000000000000062 /* FlaggedQuestionStudyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000062 /* FlaggedQuestionStudyService.swift */; };
 		A10000000000000000000063 /* StudyQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000063 /* StudyQueueView.swift */; };
 		A10000000000000000000064 /* FlaggedQuestionPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000064 /* FlaggedQuestionPracticeView.swift */; };
+		A10000000000000000000065 /* PaperImportProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000065 /* PaperImportProgressStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -194,6 +195,7 @@
 		A20000000000000000000062 /* FlaggedQuestionStudyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedQuestionStudyService.swift; sourceTree = "<group>"; };
 		A20000000000000000000063 /* StudyQueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyQueueView.swift; sourceTree = "<group>"; };
 		A20000000000000000000064 /* FlaggedQuestionPracticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedQuestionPracticeView.swift; sourceTree = "<group>"; };
+		A20000000000000000000065 /* PaperImportProgressStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperImportProgressStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -253,6 +255,7 @@
 				A20000000000000000000007 /* LocalFileStore.swift */,
 				A20000000000000000000008 /* NameNormalizer.swift */,
 				A20000000000000000000009 /* PaperImportService.swift */,
+				A20000000000000000000065 /* PaperImportProgressStore.swift */,
 				A20000000000000000000017 /* FlaggedQuestionCaptureService.swift */,
 				A20000000000000000000034 /* FlaggedQuestionSaveService.swift */,
 				A20000000000000000000062 /* FlaggedQuestionStudyService.swift */,
@@ -537,6 +540,7 @@
 				A10000000000000000000007 /* LocalFileStore.swift in Sources */,
 				A10000000000000000000008 /* NameNormalizer.swift in Sources */,
 				A10000000000000000000009 /* PaperImportService.swift in Sources */,
+				A10000000000000000000065 /* PaperImportProgressStore.swift in Sources */,
 				A1000000000000000000000A /* AddPaperView.swift in Sources */,
 				A1000000000000000000000C /* MainNavigationView.swift in Sources */,
 				A1000000000000000000000E /* RootView.swift in Sources */,
