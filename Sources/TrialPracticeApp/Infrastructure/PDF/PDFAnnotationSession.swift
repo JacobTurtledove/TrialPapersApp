@@ -6,18 +6,43 @@ import PDFKit
 final class PDFAnnotationSession: ObservableObject {
     @Published private(set) var document: PDFDocument?
     @Published private(set) var didAttemptLoad = false
+    @Published private(set) var isLoading = false
     private(set) var url: URL?
     private var isDirty = false
     private var autosaveTask: Task<Void, Never>?
+    private var loadTask: Task<Void, Never>?
 
     func load(url: URL?) {
         guard self.url != url else { return }
         autosaveTask?.cancel()
         autosaveTask = nil
+        loadTask?.cancel()
+        loadTask = nil
         self.url = url
         didAttemptLoad = url != nil
-        document = url.flatMap { PDFDocument(url: $0) }
+        document = nil
         isDirty = false
+
+        guard let url else {
+            isLoading = false
+            return
+        }
+
+        isLoading = true
+        loadTask = Task { @MainActor [weak self] in
+            let result = await Task.detached(priority: .userInitiated) {
+                LoadedPDFDocument(document: PDFDocument(url: url))
+            }.value
+
+            guard
+                !Task.isCancelled,
+                let self,
+                self.url == url
+            else { return }
+
+            self.document = result.document
+            self.isLoading = false
+        }
     }
 
     func markDirty() {
@@ -27,6 +52,8 @@ final class PDFAnnotationSession: ObservableObject {
     func saveIfNeeded() throws {
         autosaveTask?.cancel()
         autosaveTask = nil
+        loadTask?.cancel()
+        loadTask = nil
         guard isDirty, let document, let url else { return }
         guard document.write(to: url) else {
             throw PDFAnnotationPersistenceError.couldNotWriteDocument
@@ -37,6 +64,8 @@ final class PDFAnnotationSession: ObservableObject {
     func makeDeferredSaveRequestIfNeeded() -> PDFAnnotationSaveRequest? {
         autosaveTask?.cancel()
         autosaveTask = nil
+        loadTask?.cancel()
+        loadTask = nil
         guard isDirty, let document, let url else { return nil }
         isDirty = false
         return PDFAnnotationSaveRequest(document: document, url: url)
@@ -55,6 +84,10 @@ final class PDFAnnotationSession: ObservableObject {
             enqueue(request)
         }
     }
+}
+
+private struct LoadedPDFDocument: @unchecked Sendable {
+    let document: PDFDocument?
 }
 
 struct PDFAnnotationSaveRequest: Identifiable {

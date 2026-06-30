@@ -302,7 +302,7 @@ struct FileWorkflowTests {
 
     @MainActor
     @Test
-    func pdfAnnotationSessionCreatesDeferredSaveRequestForDirtyDocument() throws {
+    func pdfAnnotationSessionCreatesDeferredSaveRequestForDirtyDocument() async throws {
         let rootURL = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: rootURL) }
 
@@ -312,7 +312,7 @@ struct FileWorkflowTests {
         let session = PDFAnnotationSession()
         session.load(url: pdfURL)
 
-        let document = try #require(session.document)
+        let document = try await loadedDocument(from: session)
         let page = try #require(document.page(at: 0))
         page.addAnnotation(makeInkAnnotation(
             bounds: NSRect(x: 20, y: 20, width: 80, height: 20),
@@ -329,6 +329,17 @@ struct FileWorkflowTests {
         let reloadedDocument = try #require(PDFDocument(url: pdfURL))
         let reloadedPage = try #require(reloadedDocument.page(at: 0))
         #expect(reloadedPage.annotations.count == 1)
+    }
+
+    @MainActor
+    private func loadedDocument(from session: PDFAnnotationSession) async throws -> PDFDocument {
+        for _ in 0..<20 {
+            if let document = session.document {
+                return document
+            }
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        return try #require(session.document)
     }
 
     @Test

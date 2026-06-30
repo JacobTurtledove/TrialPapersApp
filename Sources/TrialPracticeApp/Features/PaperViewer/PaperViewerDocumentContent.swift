@@ -103,6 +103,9 @@ extension PaperViewerScreen {
             } else if hasPendingAnnotationSave(for: url) {
                 ProgressView("Saving annotations...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if annotationSession?.isLoading == true ||
+                        annotationSession?.didAttemptLoad != true {
+                PDFLoadingPlaceholder()
             } else if annotationSession?.didAttemptLoad == true {
                 ContentUnavailableView(
                     "PDF Not Found",
@@ -123,6 +126,54 @@ extension PaperViewerScreen {
                     "The \(label) has been moved or deleted. Restore it in the app data folder."
                 )
             )
+        }
+    }
+}
+
+private struct PDFLoadingPlaceholder: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 18) {
+                ForEach(0..<3, id: \.self) { index in
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(.background)
+                        .aspectRatio(0.76, contentMode: .fit)
+                        .frame(maxWidth: 520)
+                        .overlay(alignment: .topLeading) {
+                            VStack(alignment: .leading, spacing: 12) {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(.secondary.opacity(0.16))
+                                    .frame(width: 160, height: 16)
+
+                                ForEach(0..<8, id: \.self) { line in
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(.secondary.opacity(0.10))
+                                        .frame(
+                                            width: line % 3 == 0 ? 320 : 400,
+                                            height: 8
+                                        )
+                                }
+
+                                Spacer(minLength: 0)
+                            }
+                            .padding(34)
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 3)
+                                .stroke(.separator.opacity(0.55), lineWidth: 1)
+                        }
+                        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+                        .opacity(index == 0 ? 1 : 0.65)
+                }
+            }
+            .padding(28)
+            .frame(maxWidth: .infinity)
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+        .overlay(alignment: .topTrailing) {
+            ProgressView()
+                .controlSize(.small)
+                .padding(14)
         }
     }
 }
