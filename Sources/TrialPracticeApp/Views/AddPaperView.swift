@@ -1,4 +1,3 @@
-import PDFKit
 import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
@@ -24,6 +23,7 @@ struct AddPaperView: View {
     @State private var errorMessage: String?
     @State private var isImporting = false
     @State private var isPDFTargeted = false
+    @State private var importTask: Task<Void, Never>?
 
     private let initialSubjectID: UUID?
     private let initialSchoolName: String
@@ -55,13 +55,6 @@ struct AddPaperView: View {
         .map { $0 }
     }
 
-    private var questionPageCount: Int? {
-        guard let questionPDFURL else { return nil }
-        return withSecurityScopedAccess(to: questionPDFURL) {
-            PDFDocument(url: questionPDFURL)?.pageCount
-        }
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -69,8 +62,10 @@ struct AddPaperView: View {
                     .font(.title2.bold())
                 Spacer()
                 Button("Cancel") {
+                    importTask?.cancel()
                     dismiss()
                 }
+                .disabled(isImporting)
             }
             .padding(24)
 
@@ -219,6 +214,9 @@ struct AddPaperView: View {
                 solutionsPDFURL = nil
             }
         }
+        .onDisappear {
+            importTask?.cancel()
+        }
     }
 
     private func handlePDFSelection(_ result: Result<[URL], Error>) {
@@ -283,55 +281,61 @@ struct AddPaperView: View {
             return
         }
 
-        let scopedURLs = [questionPDFURL, solutionsPDFURL].compactMap { $0 }
-        let startedURLs = scopedURLs.filter { $0.startAccessingSecurityScopedResource() }
-        defer {
-            for url in startedURLs {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-
         isImporting = true
+        errorMessage = nil
         let importService = PaperImportService(rootURL: rootURL)
-        var importedFiles: ImportedPaperFiles?
-        do {
-            let request = PaperImportRequest(
-                subject: subject,
-                school: school,
-                year: validatedYear,
-                mode: solutionsIncluded || solutionsPDFURL == nil ? .combined : .separate,
-                questionPDFURL: questionPDFURL,
-                solutionsPDFURL: solutionsPDFURL
-            )
-            let files = try importService.importPaper(request)
-            importedFiles = files
+        let request = PaperImportRequest(
+            subjectFilenameValue: subject.filenameValue,
+            schoolFilenameValue: school.filenameValue,
+            year: validatedYear,
+            mode: solutionsIncluded || solutionsPDFURL == nil ? .combined : .separate,
+            questionPDFURL: questionPDFURL,
+            solutionsPDFURL: solutionsPDFURL
+        )
 
-            if school.modelContext == nil {
-                modelContext.insert(school)
-            }
-            modelContext.insert(
-                Paper(
-                    subjectID: subject.id,
-                    schoolID: school.id,
-                    year: validatedYear,
-                    questionPDFRelativePath: files.combinedRelativePath,
-                    solutionsPDFRelativePath: files.combinedRelativePath,
-                    combinedPDFRelativePath: files.combinedRelativePath,
-                    solutionsStartPage: !solutionsIncluded && solutionsPDFURL != nil
-                        ? questionPageCount.map { $0 + 1 }
-                        : nil,
-                    hasSolutions: solutionsIncluded || solutionsPDFURL != nil
+        importTask?.cancel()
+        importTask = Task { @MainActor in
+            var importedFiles: ImportedPaperFiles?
+            do {
+                let files = try await Task.detached(priority: .userInitiated) {
+                    try importService.importPaper(request)
+                }.value
+                importedFiles = files
+
+                guard !Task.isCancelled else {
+                    importService.discardImportedFiles(files)
+                    isImporting = false
+                    return
+                }
+
+                if school.modelContext == nil {
+                    modelContext.insert(school)
+                }
+                modelContext.insert(
+                    Paper(
+                        subjectID: subject.id,
+                        schoolID: school.id,
+                        year: validatedYear,
+                        questionPDFRelativePath: files.combinedRelativePath,
+                        solutionsPDFRelativePath: files.combinedRelativePath,
+                        combinedPDFRelativePath: files.combinedRelativePath,
+                        solutionsStartPage: !solutionsIncluded && solutionsPDFURL != nil
+                            ? files.questionPageCount.map { $0 + 1 }
+                            : nil,
+                        hasSolutions: solutionsIncluded || solutionsPDFURL != nil
+                    )
                 )
-            )
-            try modelContext.save()
-            dismiss()
-        } catch {
-            modelContext.rollback()
-            if let importedFiles {
-                importService.discardImportedFiles(importedFiles)
+                try modelContext.save()
+                isImporting = false
+                dismiss()
+            } catch {
+                modelContext.rollback()
+                if let importedFiles {
+                    importService.discardImportedFiles(importedFiles)
+                }
+                errorMessage = error.localizedDescription
+                isImporting = false
             }
-            errorMessage = error.localizedDescription
-            isImporting = false
         }
     }
 }

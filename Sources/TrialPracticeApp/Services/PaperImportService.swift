@@ -1,27 +1,62 @@
 import Foundation
 import PDFKit
 
-enum PaperImportMode: String, CaseIterable, Identifiable {
+enum PaperImportMode: String, CaseIterable, Identifiable, Sendable {
     case separate = "Separate PDFs"
     case combined = "Combined PDF"
 
     var id: String { rawValue }
 }
 
-struct PaperImportRequest {
-    let subject: Subject
-    let school: School
+struct PaperImportRequest: Sendable {
+    let subjectFilenameValue: String
+    let schoolFilenameValue: String
     let year: String
     let mode: PaperImportMode
     let questionPDFURL: URL
     let solutionsPDFURL: URL?
+
+    init(
+        subject: Subject,
+        school: School,
+        year: String,
+        mode: PaperImportMode,
+        questionPDFURL: URL,
+        solutionsPDFURL: URL?
+    ) {
+        self.init(
+            subjectFilenameValue: subject.filenameValue,
+            schoolFilenameValue: school.filenameValue,
+            year: year,
+            mode: mode,
+            questionPDFURL: questionPDFURL,
+            solutionsPDFURL: solutionsPDFURL
+        )
+    }
+
+    init(
+        subjectFilenameValue: String,
+        schoolFilenameValue: String,
+        year: String,
+        mode: PaperImportMode,
+        questionPDFURL: URL,
+        solutionsPDFURL: URL?
+    ) {
+        self.subjectFilenameValue = subjectFilenameValue
+        self.schoolFilenameValue = schoolFilenameValue
+        self.year = year
+        self.mode = mode
+        self.questionPDFURL = questionPDFURL
+        self.solutionsPDFURL = solutionsPDFURL
+    }
 }
 
-struct ImportedPaperFiles {
+struct ImportedPaperFiles: Sendable {
     let combinedRelativePath: String
+    let questionPageCount: Int?
 }
 
-struct PaperImportService {
+struct PaperImportService: Sendable {
     enum ImportError: LocalizedError {
         case unreadablePDF(String)
         case missingSolutionsPDF
@@ -44,15 +79,15 @@ struct PaperImportService {
     func importPaper(_ request: PaperImportRequest) throws -> ImportedPaperFiles {
         let relativeDirectory = [
             "Papers",
-            request.subject.filenameValue,
-            request.school.filenameValue
+            request.subjectFilenameValue,
+            request.schoolFilenameValue
         ].joined(separator: "/")
         let directory = rootURL.appending(path: relativeDirectory, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
         let combinedName = PaperFileNames.combined(
-            subject: request.subject,
-            school: request.school,
+            subjectFilenameValue: request.subjectFilenameValue,
+            schoolFilenameValue: request.schoolFilenameValue,
             year: request.year
         )
         let combinedDestination = directory.appending(path: combinedName)
@@ -69,6 +104,7 @@ struct PaperImportService {
             }
         }
 
+        var questionPageCount: Int?
         do {
             switch request.mode {
             case .separate:
@@ -80,6 +116,7 @@ struct PaperImportService {
                 guard let questionDocument = PDFDocument(url: localQuestionURL) else {
                     throw ImportError.unreadablePDF("The question paper")
                 }
+                questionPageCount = questionDocument.pageCount
                 guard let solutionsURL = request.solutionsPDFURL else {
                     throw ImportError.missingSolutionsPDF
                 }
@@ -116,7 +153,8 @@ struct PaperImportService {
             }
 
             return ImportedPaperFiles(
-                combinedRelativePath: "\(relativeDirectory)/\(combinedName)"
+                combinedRelativePath: "\(relativeDirectory)/\(combinedName)",
+                questionPageCount: questionPageCount
             )
         } catch {
             for url in createdURLs {
@@ -174,7 +212,7 @@ struct PaperImportService {
                 at: temporaryDirectory,
                 withIntermediateDirectories: true
             )
-            try coordinatedCopy(from: sourceURL, to: temporaryURL)
+            try localCopy(from: sourceURL, to: temporaryURL)
             return temporaryURL
         } catch {
             try? fileManager.removeItem(at: temporaryDirectory)
@@ -182,12 +220,19 @@ struct PaperImportService {
         }
     }
 
-    private func coordinatedCopy(from sourceURL: URL, to destinationURL: URL) throws {
+    private func localCopy(from sourceURL: URL, to destinationURL: URL) throws {
         let didStartAccess = sourceURL.startAccessingSecurityScopedResource()
         defer {
             if didStartAccess {
                 sourceURL.stopAccessingSecurityScopedResource()
             }
+        }
+
+        do {
+            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+            return
+        } catch {
+            try? FileManager.default.removeItem(at: destinationURL)
         }
 
         let coordinator = NSFileCoordinator(filePresenter: nil)
